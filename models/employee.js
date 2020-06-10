@@ -17,6 +17,11 @@ const employeeSchema = new mongoose.Schema({
     maxlength: 255,
     unique: true,
   },
+  phoneNumber: {
+    type: String,
+    required: true,
+    unique: true,
+  },
   password: {
     type: String,
     required: true,
@@ -43,7 +48,10 @@ validateEmployee = (employee) => {
   const schema = {
     name: Joi.string().min(2).max(50).required(),
     email: Joi.string().min(5).max(255).required().email(),
-    password: Joi.string().min(5).max(255).required(),
+    password: Joi.string().min(5).max(255).alphanum().required(),
+    phoneNumber: Joi.string()
+      .regex(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im)
+      .required(),
   };
 
   return Joi.validate(employee, schema);
