@@ -1,24 +1,53 @@
-const mongoose = require("mongoose");
+const config = require("config");
+const jwt = require("jsonwebtoken");
 const Joi = require("joi");
+const mongoose = require("mongoose");
 
-const schema = new mongoose.Schema({
+const employeeSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: !true,
-    default: "EMPLOYEE"
-  }
+    required: true,
+    minlength: 2,
+    maxlength: 50,
+  },
+  email: {
+    type: String,
+    required: true,
+    minlength: 5,
+    maxlength: 255,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+    minlength: 5,
+    maxlength: 1024,
+  },
 });
 
-function validateEmployee(emp) {
+employeeSchema.methods.generateAuthToken = () => {
+  const token = jwt.sign(
+    {
+      _id: this._id,
+      name: this.name,
+      email: this.email,
+    },
+    config.get("jwtPrivateKey")
+  );
+  return token;
+};
+
+const Employee = mongoose.model("Employee", employeeSchema);
+
+validateEmployee = (employee) => {
   const schema = {
-    name: Joi.string()
-      .min(2)
-      .max(50)
-      .required()
+    name: Joi.string().min(2).max(50).required(),
+    email: Joi.string().min(5).max(255).required().email(),
+    password: Joi.string().min(5).max(255).required(),
   };
-  return Joi.validate(emp, schema);
-}
-const Employee = mongoose.model("employee", schema);
+
+  return Joi.validate(employee, schema);
+};
 
 exports.Employee = Employee;
-exports.validateEmployee = validateEmployee;
+exports.validate = validateEmployee;
