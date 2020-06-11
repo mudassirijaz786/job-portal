@@ -1,6 +1,8 @@
 const auth = require("../middleware/auth");
 const _ = require("lodash");
 const { FAQs } = require("../models/faqs");
+const express = require("express");
+
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -17,9 +19,10 @@ router.post("/", async (req, res) => {
   res.json({ message: "faqs has been saved successfully" });
 });
 
+// FIXME: updation not working
 router.put("/:id", async (req, res) => {
   const faq = req.body.faq;
-  const faq = await FAQs.findByIdAndUpdate(
+  const faqs = await FAQs.findByIdAndUpdate(
     req.params.id,
     { $set: { faq } },
     { new: true }
@@ -31,3 +34,4 @@ router.delete("/:id", async (req, res) => {
   const faq = await FAQs.findByIdAndRemove(req.params.id);
   res.json({ message: "faqs has been deleted successfully" });
 });
+module.exports = router;

@@ -38,6 +38,7 @@ router.delete("/:id", auth, async (req, res) => {
   res.send(result);
 });
 
+// FIXME: status is not updating to true
 router.put("/read/:id", auth, async (req, res) => {
   const message = await ContactUs.findByIdAndUpdate(
     req.params.id,
