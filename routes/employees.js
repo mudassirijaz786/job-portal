@@ -14,9 +14,7 @@ const sendEmailForResetPassword = require("../utils/emailService");
 router.get("/me", auth, async (req, res) => {
   const token = req.header("x-auth-token");
   const decoded = jwt.verify(token, config.get("jwtPrivateKey"));
-  const employee = await Employee.findById(decoded._id).select(
-    "-password -_id"
-  );
+  const employee = await Employee.findById(decoded._id).select("-password ");
   res.json({ currentEmployee: employee });
 });
 
