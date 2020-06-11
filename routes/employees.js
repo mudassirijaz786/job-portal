@@ -7,7 +7,6 @@ const express = require("express");
 const { Employee, validate } = require("../models/employee");
 const router = express.Router();
 const Joi = require("joi");
-
 const sendEmailForResetPassword = require("../utils/emailService");
 
 // getting current employee
@@ -20,7 +19,7 @@ router.get("/me", auth, async (req, res) => {
   res.json({ currentEmployee: employee });
 });
 
-// login route
+// login
 router.post("/login", async (req, res) => {
   const { error } = validateLogin(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -40,7 +39,7 @@ router.post("/login", async (req, res) => {
   res.json({ token });
 });
 
-// register route
+// register
 
 router.post("/register", async (req, res) => {
   const { error } = validate(req.body);
@@ -64,9 +63,11 @@ router.post("/register", async (req, res) => {
     .header("x-auth-token", token)
     .send(_.pick(employee, ["_id", "name", "email"]));
 });
+
+// new password after resetting
 router.post("/resetPassword/newPassword", async (req, res) => {
-  const emp = await Employee.findById(req.body._id);
-  if (!emp) {
+  const employeeId = await Employee.findById(req.body._id);
+  if (!employeeId) {
     res.status(400).json({ message: "Invalid id" });
   } else {
     const salt = await bcrypt.genSalt(10);
@@ -84,6 +85,8 @@ router.post("/resetPassword/newPassword", async (req, res) => {
     res.json({ token });
   }
 });
+
+// sending email on password reset
 router.post("/resetPassword/sendEmail", async (req, res) => {
   const email = req.body.email;
   const employee = await Employee.findOne({ email });
@@ -100,6 +103,7 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
   }
   res.json({ message: "An email with the link has been forwarded to you.." });
 });
+
 // function to validate login params
 validateLogin = (req) => {
   const schema = {
