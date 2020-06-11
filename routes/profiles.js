@@ -2,7 +2,6 @@ const auth = require("../middleware/auth");
 const _ = require("lodash");
 const express = require("express");
 const { Profile } = require("../models/profile");
-// const auth = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -30,7 +29,6 @@ router.post("/", auth, async (req, res) => {
   res.json({ message: "Profile has been saved successfully" });
 });
 
-// summary update
 router.post("/summary/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
@@ -138,9 +136,7 @@ router.put("/deleteProject/:id", auth, async (req, res) => {
 
     {
       $pull: {
-        projects: {
-          projectName: req.body.projectName,
-        },
+        projects: req.body.project,
       },
     },
 
@@ -157,9 +153,7 @@ router.put("/deleteExperince/:id", auth, async (req, res) => {
 
     {
       $pull: {
-        experiences: {
-          jobTitle: req.body.jobTitle,
-        },
+        experiences: req.body.experience,
       },
     },
 
@@ -176,10 +170,7 @@ router.put("/deleteEducation/:id", auth, async (req, res) => {
 
     {
       $pull: {
-        educations: {
-          // programme: req.body.projectName,
-          major: req.body.major,
-        },
+        educations: req.body.education,
       },
     },
 
@@ -188,6 +179,7 @@ router.put("/deleteEducation/:id", auth, async (req, res) => {
 
   res.json({ message: "Education has been pulled out successfully" });
 });
+
 // TODO: testing on postman
 router.put("/deleteSkill/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
@@ -195,10 +187,7 @@ router.put("/deleteSkill/:id", auth, async (req, res) => {
 
     {
       $pull: {
-        skills: {
-          name: req.body.skill.name,
-          level: req.body.skill.level,
-        },
+        skills: req.body.skill,
       },
     },
 
@@ -207,6 +196,7 @@ router.put("/deleteSkill/:id", auth, async (req, res) => {
 
   res.json({ message: "Skill has been pulled out successfully" });
 });
+
 // TODO: testing on postman
 router.put("/deleteLanguage/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
