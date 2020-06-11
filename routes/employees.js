@@ -5,6 +5,7 @@ const config = require("config");
 const _ = require("lodash");
 const express = require("express");
 const { Employee, validate } = require("../models/employee");
+const { Profile } = require("../models/profile");
 const router = express.Router();
 const Joi = require("joi");
 const sendEmailForResetPassword = require("../utils/emailService");
@@ -55,7 +56,15 @@ router.post("/register", async (req, res) => {
   const salt = await bcrypt.genSalt(10);
   employee.password = await bcrypt.hash(employee.password, salt);
   await employee.save();
-
+  const profile = new Profile({
+    employee_id: employee._id,
+    projects: [],
+    experiences: [],
+    educations: [],
+    languages: [],
+    skills: [],
+  });
+  await profile.save();
   const token = employee.generateAuthToken();
   res
     .header("x-auth-token", token)

@@ -6,6 +6,12 @@ const { Profile } = require("../models/profile");
 
 const router = express.Router();
 
+// my profile
+router.get("/me/:id", auth, async (req, res) => {
+  const profile = await Profile.findOne({ employee_id: req.params.id });
+  res.send(profile);
+});
+
 // profile creation
 router.post("/", auth, async (req, res) => {
   const profile = new Profile(
@@ -182,8 +188,7 @@ router.put("/deleteEducation/:id", auth, async (req, res) => {
 
   res.json({ message: "Education has been pulled out successfully" });
 });
-
-// pulling skill object
+// TODO: testing on postman
 router.put("/deleteSkill/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
@@ -191,8 +196,8 @@ router.put("/deleteSkill/:id", auth, async (req, res) => {
     {
       $pull: {
         skills: {
-          name: req.body.name,
-          level: req.body.level,
+          name: req.body.skill.name,
+          level: req.body.skill.level,
         },
       },
     },
@@ -202,8 +207,7 @@ router.put("/deleteSkill/:id", auth, async (req, res) => {
 
   res.json({ message: "Skill has been pulled out successfully" });
 });
-
-// pulling language object
+// TODO: testing on postman
 router.put("/deleteLanguage/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
@@ -211,8 +215,8 @@ router.put("/deleteLanguage/:id", auth, async (req, res) => {
     {
       $pull: {
         languages: {
-          name: name,
-          lavel: req.body.level,
+          name: req.body.language.name,
+          lavel: req.body.language.level,
         },
       },
     },
@@ -226,7 +230,7 @@ router.put("/deleteLanguage/:id", auth, async (req, res) => {
 // updating project object
 router.post("/updateProject/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
+    { employee_id: req.params.id, "projects._id": project._id },
 
     {
       $set: {
@@ -243,40 +247,39 @@ router.post("/updateProject/:id", auth, async (req, res) => {
 
 // updating experience object
 router.post("/updateExperince/:id", auth, async (req, res) => {
+  const { experience } = req.body;
   const profile = await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
+    { employee_id: req.params.id, "experiences._id": experience._id },
 
     {
       $set: {
-        "experience.$.jobTitle": req.body.experience.jobTitle,
-        "experience.$.company": req.body.experience.company,
-        "experience.$.industry": req.body.experience.industry,
-        "experience.$.localtion": req.body.experience.localtion,
-        "experience.$.startDate": req.body.experience.startDate,
-        "experience.$.endDate": req.body.experience.endDate,
-        "experience.$.description": req.body.experience.description,
+        "experiences.$.jobTitle": experience.jobTitle,
+        "experiences.$.company": experience.company,
+        "experiences.$.industry": experience.industry,
+        "experiences.$.localtion": experience.localtion,
+        "experiences.$.startDate": experience.startDate,
+        "experiences.$.endDate": experience.endDate,
+        "experiences.$.description": experience.description,
       },
     },
 
     { new: true }
   );
 
-  res.json({
-    message: "Experience has been updated and saved successfully",
-  });
+  res.json({ message: "Experience has been updated and saved successfully" });
 });
 
 // updating education object
 router.post("/updateEducation/:id", auth, async (req, res) => {
+  const { education } = req.body;
   const profile = await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
-
+    { employee_id: req.params.id, "educations._id": education._id },
     {
       $set: {
-        "education.$.instituteName": req.body.education.instituteName,
-        "education.$.programme": req.body.education.programme,
-        "education.$.major": req.body.education.major,
-        "education.$.completionYear": req.body.education.completionYear,
+        "educations.$.instituteName": education.instituteName,
+        "educations.$.programme": education.programme,
+        "educations.$.major": education.major,
+        "educations.$.completionYear": education.completionYear,
       },
     },
 
@@ -290,13 +293,14 @@ router.post("/updateEducation/:id", auth, async (req, res) => {
 
 // updating skill object
 router.post("/updateSkill/:id", auth, async (req, res) => {
+  const { skill } = req.body;
   const profile = await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
+    { employee_id: req.params.id, "skills._id": skill._id },
 
     {
       $set: {
-        "skills.$.name": req.body.skill.name,
-        "skills.$.level": req.body.skill.level,
+        "skills.$.name": skill.name,
+        "skills.$.level": skill.level,
       },
     },
 
@@ -310,13 +314,13 @@ router.post("/updateSkill/:id", auth, async (req, res) => {
 
 // updating laguage object
 router.post("/updateLanguage/:id", auth, async (req, res) => {
+  const { language } = req.body;
   const profile = await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
-
+    { employee_id: req.params.id, "languages._id": language._id },
     {
       $set: {
-        "languages.$.name": req.body.language.name,
-        "languages.$.level": req.body.language.level,
+        "languages.$.name": language.name,
+        "languages.$.level": language.level,
       },
     },
 
