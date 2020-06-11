@@ -100,33 +100,45 @@ router.put("/deleteProject/:id", auth, async (req, res) => {
     { employee_id: req.params.id },
     {
       $pull: {
-        projects: req.body.project,
+        projects: {
+          _id: req.body.project._id,
+        },
       },
     },
     { new: true }
   );
+
+  res.json({ message: "Profile has been saved successfully" });
 });
 router.put("/deleteExperince/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
     {
       $pull: {
-        experiences: req.body.experience,
+        experiences: {
+          _id: req.body.experience._id,
+        },
       },
     },
     { new: true }
   );
+
+  res.json({ message: "Profile has been saved successfully" });
 });
 router.put("/deleteEducation/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
     {
       $pull: {
-        educations: req.body.education,
+        educations: {
+          _id: req.body.education._id,
+        },
       },
     },
     { new: true }
   );
+
+  res.json({ message: "Profile has been saved successfully" });
 });
 // TODO: testing on postman
 router.put("/deleteSkill/:id", auth, async (req, res) => {
@@ -134,11 +146,12 @@ router.put("/deleteSkill/:id", auth, async (req, res) => {
     { employee_id: req.params.id },
     {
       $pull: {
-        skills: req.body.skill,
+        skills: { _id: req.body.skill._id },
       },
     },
     { new: true }
   );
+  res.json({ message: "Profile has been saved successfully" });
 });
 // TODO: testing on postman
 router.put("/deleteLanguage/:id", auth, async (req, res) => {
@@ -147,13 +160,13 @@ router.put("/deleteLanguage/:id", auth, async (req, res) => {
     {
       $pull: {
         languages: {
-          name: req.body.language.name,
-          lavel: req.body.language.level,
+          _id: req.body.language._id,
         },
       },
     },
     { new: true }
   );
+  res.json({ message: "Profile has been saved successfully" });
 });
 
 router.post("/updateProject/:id", auth, async (req, res) => {
