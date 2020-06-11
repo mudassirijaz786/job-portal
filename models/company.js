@@ -36,6 +36,11 @@ const companySchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
+  verified: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
 });
 
 // token generation

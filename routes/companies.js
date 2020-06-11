@@ -9,10 +9,8 @@ const router = express.Router();
 const Joi = require("joi");
 
 // getting current company
-router.get("/me", auth, async (req, res) => {
-  const token = req.header("x-auth-token");
-  const decoded = jwt.verify(token, config.get("jwtPrivateKey"));
-  const company = await Company.findById(decoded._id).select("password");
+router.get("/:id", auth, async (req, res) => {
+  const company = await Company.findById(req.params.id).select("-password");
   res.json({ currentCompany: company });
 });
 
