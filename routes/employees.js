@@ -11,28 +11,74 @@ const Joi = require("joi");
 const sendEmailForResetPassword = require("../utils/emailService");
 
 // getting current employee
-router.get("/me", auth, async (req, res) => {
-  const token = req.header("x-auth-token");
-  const decoded = jwt.verify(token, config.get("jwtPrivateKey"));
-  const employee = await Employee.findById(decoded._id).select("-password ");
-  res.json({ currentEmployee: employee });
+/**
+ * @swagger
+ * /api/employee/me/{id}:
+ *  get:
+ *    description: Use to request the data of the employee
+ *    summary: Gets a user by ID.
+ *    parameters:
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: Object ID of the employee to get.
+ *    responses:
+ *      '200':
+ *        description: A successful response containg the info about that particular employee
+ *      '400':
+ *        description: message in json format indicating employee not found!
+ */
+router.get("/me/:id", auth, async (req, res) => {
+  const employee = await Employee.findById(req.params.id).select("-password ");
+  if (employee) {
+    res.json({ currentEmployee: employee });
+  } else {
+    res.status(400).json({ message: "Not Found!" });
+  }
 });
 
 // login
+/**
+ * @swagger
+ * /api/employee/login:
+ *  post:
+ *    description: use to login employee into the system
+ *    summary: login employee into the system using email and password.
+ *    parameters:
+ *    - in: body
+ *      name: user
+ *      description: The user to login.
+ *      schema:
+ *        type: object
+ *        required:
+ *        - email
+ *        - password
+ *        properties:
+ *          email:
+ *            type: string
+ *          password:
+ *            type: string
+ *    responses:
+ *      '200':
+ *        description: jwt token for that particular user loged in.
+ *      '400':
+ *        description: message in json format Invalid email or password.
+ */
 router.post("/login", async (req, res) => {
   const { error } = validateLogin(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   let employee = await Employee.findOne({ email: req.body.email });
   if (!employee)
-    return res.status(400).json({ error: "Invalid email or password." });
+    return res.status(400).json({ message: "Invalid email or password." });
 
   const validPassword = await bcrypt.compare(
     req.body.password,
     employee.password
   );
   if (!validPassword)
-    return res.status(400).json({ error: "Invalid email or password." });
+    return res.status(400).json({ message: "Invalid email or password." });
 
   const token = employee.generateAuthToken();
   res.json({ token });
