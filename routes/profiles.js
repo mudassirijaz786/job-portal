@@ -2,11 +2,12 @@ const auth = require("../middleware/auth");
 const _ = require("lodash");
 const express = require("express");
 const { Profile } = require("../models/profile");
+// const auth = require("../middleware/auth");
 
 const router = express.Router();
 
 // profile creation route
-router.post("", auth, async (req, res) => {
+router.post("", auth, auth, async (req, res) => {
   const profile = new Profile(
     _.pick(req.body, [
       "employee_id",
@@ -24,7 +25,7 @@ router.post("", auth, async (req, res) => {
   res.json({ message: "Profile has been saved successfully" });
 });
 
-router.post("/summary/:id", async (req, res) => {
+router.post("/summary/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
 
@@ -37,7 +38,7 @@ router.post("/summary/:id", async (req, res) => {
   );
   res.json({ message: "Profile has been saved successfully" });
 });
-router.post("/addProject/:id", async (req, res) => {
+router.post("/addProject/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
 
@@ -51,7 +52,7 @@ router.post("/addProject/:id", async (req, res) => {
   res.json({ message: "Profile has been saved successfully" });
 });
 
-router.post("/addExperince/:id", async (req, res) => {
+router.post("/addExperince/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
 
@@ -65,7 +66,7 @@ router.post("/addExperince/:id", async (req, res) => {
   res.json({ message: "Profile has been saved successfully" });
 });
 
-// router.post("/addExperince/:id", async (req, res) => {
+// router.post("/addExperince/:id",auth, async (req, res) => {
 //   const profile = await Profile.findOneAndUpdate(
 //     { employee_id: req.params.id },
 
@@ -79,7 +80,7 @@ router.post("/addExperince/:id", async (req, res) => {
 //   res.json({ message: "Profile has been saved successfully" });
 // });
 
-router.post("/addLanguage/:id", async (req, res) => {
+router.post("/addLanguage/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
 
@@ -92,7 +93,7 @@ router.post("/addLanguage/:id", async (req, res) => {
   );
   res.json({ message: "Profile has been saved successfully" });
 });
-router.post("/addSkill/:id", async (req, res) => {
+router.post("/addSkill/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
     {
@@ -105,7 +106,7 @@ router.post("/addSkill/:id", async (req, res) => {
   res.json({ message: "Profile has been saved successfully" });
 });
 
-router.put("/deleteProject/:id", async (req, res) => {
+router.put("/deleteProject/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
     {
@@ -118,7 +119,7 @@ router.put("/deleteProject/:id", async (req, res) => {
     { new: true }
   );
 });
-router.put("/deleteExperince/:id", async (req, res) => {
+router.put("/deleteExperince/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
     {
@@ -131,7 +132,7 @@ router.put("/deleteExperince/:id", async (req, res) => {
     { new: true }
   );
 });
-router.put("/deleteEducation/:id", async (req, res) => {
+router.put("/deleteEducation/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
     {
@@ -146,7 +147,7 @@ router.put("/deleteEducation/:id", async (req, res) => {
   );
 });
 
-router.put("/deleteSkill/:id", async (req, res) => {
+router.put("/deleteSkill/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
     {
@@ -161,7 +162,7 @@ router.put("/deleteSkill/:id", async (req, res) => {
   );
 });
 
-router.put("/deleteLanguage/:id", async (req, res) => {
+router.put("/deleteLanguage/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
     {
@@ -176,7 +177,7 @@ router.put("/deleteLanguage/:id", async (req, res) => {
   );
 });
 
-router.post("/updateProject/:id", async (req, res) => {
+router.post("/updateProject/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
 
@@ -192,7 +193,7 @@ router.post("/updateProject/:id", async (req, res) => {
   //   {$set: {"items.$.name": "yourValue","items.$.value": "yourvalue"}})
   res.json({ message: "Profile has been saved successfully" });
 });
-router.post("/updateExperince/:id", async (req, res) => {
+router.post("/updateExperince/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
     {
@@ -212,7 +213,7 @@ router.post("/updateExperince/:id", async (req, res) => {
   res.json({ message: "Profile has been saved successfully" });
 });
 
-router.post("/updateEducation/:id", async (req, res) => {
+router.post("/updateEducation/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
     {
@@ -228,7 +229,7 @@ router.post("/updateEducation/:id", async (req, res) => {
   //   {$set: {"items.$.name": "yourValue","items.$.value": "yourvalue"}})
   res.json({ message: "Profile has been saved successfully" });
 });
-router.post("/updateSkill/:id", async (req, res) => {
+router.post("/updateSkill/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
     {
@@ -243,7 +244,7 @@ router.post("/updateSkill/:id", async (req, res) => {
   res.json({ message: "Profile has been saved successfully" });
 });
 
-router.post("/updateLanguage/:id", async (req, res) => {
+router.post("/updateLanguage/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
     {
