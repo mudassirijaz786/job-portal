@@ -1,7 +1,7 @@
 const auth = require("../middleware/auth");
 const _ = require("lodash");
 const express = require("express");
-const { Profile } = require("../models/profile");
+const { Profile, validateSkill } = require("../models/profile");
 
 const router = express.Router();
 
@@ -113,20 +113,26 @@ router.post("/addLanguage/:id", auth, async (req, res) => {
 });
 
 // adding skill to skills array
+// :FIXME: adding all messages,,,
 router.post("/addSkill/:id", auth, async (req, res) => {
-  const profile = await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
-
-    {
-      $push: {
-        skills: req.body.skill,
+  const { error } = validateSkill(req.body.skill);
+  if (error) {
+    console.log(error.details);
+    return res.status(400).json({ message: error.details[0].message });
+  } else {
+    const profile = await Profile.findOneAndUpdate(
+      { employee_id: req.params.id },
+      {
+        $push: {
+          skills: req.body.skill,
+        },
       },
-    },
 
-    { new: true }
-  );
+      { new: true }
+    );
 
-  res.json({ message: "Skill has been saved successfully" });
+    res.json({ message: "Skill has been saved successfully" });
+  }
 });
 
 // pulling project object

@@ -96,5 +96,14 @@ validateProfile = (profile) => {
   return Joi.validate(profile, schema);
 };
 
+validateSkill = (skill) => {
+  const schema = {
+    name: Joi.string().required(),
+    level: Joi.string().required(),
+  };
+  return Joi.validate(skill, schema);
+};
+
 exports.Profile = Profile;
 exports.validate = validateProfile;
+exports.validateSkill = validateSkill;
