@@ -1,6 +1,7 @@
 const nodemailer = require("nodemailer");
 const config = require("config");
-var transporter = nodemailer.createTransport({
+
+const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: "tradebabapk@gmail.com",
@@ -8,8 +9,8 @@ var transporter = nodemailer.createTransport({
   },
 });
 
-module.exports = function sendEmailForResetPassword(to, subject, text, _id) {
-  var mailOptions = {
+module.exports = sendEmailForResetPassword = (to, subject, text, _id) => {
+  const mailOptions = {
     from: "tradebabapk@gmail.com",
     to: to,
     subject: subject,
@@ -18,12 +19,13 @@ module.exports = function sendEmailForResetPassword(to, subject, text, _id) {
       "frontEndURL"
     )}/?id=${_id}'>Reset Password</a>`,
   };
-  transporter.sendMail(mailOptions, function (error, info) {
+
+  transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.log(error);
       return false;
     } else {
-      console.log("Email sent: " + info.response);
+      console.log("Email sent: ", info.response);
       return true;
     }
   });

@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const Joi = require("joi");
 const mongoose = require("mongoose");
 
+// employee schema
 const employeeSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -30,6 +31,7 @@ const employeeSchema = new mongoose.Schema({
   },
 });
 
+// token generation
 employeeSchema.methods.generateAuthToken = () => {
   const token = jwt.sign(
     {
@@ -42,6 +44,7 @@ employeeSchema.methods.generateAuthToken = () => {
   return token;
 };
 
+// employee model
 const Employee = mongoose.model("Employee", employeeSchema);
 
 validateEmployee = (employee) => {
