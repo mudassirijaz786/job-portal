@@ -72,7 +72,7 @@ const profileSchema = new mongoose.Schema({
       name: {
         type: String,
       },
-      lavel: {
+      level: {
         type: String,
       },
     },

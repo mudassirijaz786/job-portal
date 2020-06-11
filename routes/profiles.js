@@ -2,7 +2,6 @@ const auth = require("../middleware/auth");
 const _ = require("lodash");
 const express = require("express");
 const { Profile } = require("../models/profile");
-// const auth = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -25,6 +24,10 @@ router.post("", auth, auth, async (req, res) => {
   res.json({ message: "Profile has been saved successfully" });
 });
 
+router.get("/me/:id", auth, async (req, res) => {
+  const profile = await Profile.findOne({ employee_id: req.params.id });
+  res.send(profile);
+});
 router.post("/summary/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
@@ -66,20 +69,6 @@ router.post("/addExperince/:id", auth, async (req, res) => {
   res.json({ message: "Profile has been saved successfully" });
 });
 
-// router.post("/addExperince/:id",auth, async (req, res) => {
-//   const profile = await Profile.findOneAndUpdate(
-//     { employee_id: req.params.id },
-
-//     {
-//       $push: {
-//         experiences: req.body.experience,
-//       },
-//     },
-//     { new: true }
-//   );
-//   res.json({ message: "Profile has been saved successfully" });
-// });
-
 router.post("/addLanguage/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
@@ -111,9 +100,7 @@ router.put("/deleteProject/:id", auth, async (req, res) => {
     { employee_id: req.params.id },
     {
       $pull: {
-        projects: {
-          projectName: req.body.projectName,
-        },
+        projects: req.body.project,
       },
     },
     { new: true }
@@ -124,9 +111,7 @@ router.put("/deleteExperince/:id", auth, async (req, res) => {
     { employee_id: req.params.id },
     {
       $pull: {
-        experiences: {
-          jobTitle: req.body.jobTitle,
-        },
+        experiences: req.body.experience,
       },
     },
     { new: true }
@@ -137,10 +122,7 @@ router.put("/deleteEducation/:id", auth, async (req, res) => {
     { employee_id: req.params.id },
     {
       $pull: {
-        educations: {
-          programme: req.body.projectName,
-          major: req.body.major,
-        },
+        educations: req.body.education,
       },
     },
     { new: true }
@@ -152,10 +134,7 @@ router.put("/deleteSkill/:id", auth, async (req, res) => {
     { employee_id: req.params.id },
     {
       $pull: {
-        skills: {
-          name: req.body.skill.name,
-          level: req.body.skill.level,
-        },
+        skills: req.body.skill,
       },
     },
     { new: true }
@@ -210,7 +189,6 @@ router.post("/updateExperince/:id", auth, async (req, res) => {
     },
     { new: true }
   );
-  console.log(profile);
   //   {$set: {"items.$.name": "yourValue","items.$.value": "yourvalue"}})
   res.json({ message: "Profile has been saved successfully" });
 });
