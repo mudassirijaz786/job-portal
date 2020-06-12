@@ -252,7 +252,7 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
 validateLogin = (req) => {
   const schema = {
     email: Joi.string().min(5).max(255).required().email(),
-    password: Joi.string().alphanum.min(8).max(32).required(),
+    password: Joi.string().alphanum().min(8).max(32).required(),
   };
 
   return Joi.validate(req, schema);
