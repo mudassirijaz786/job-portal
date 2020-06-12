@@ -15,7 +15,7 @@ const sendEmailForResetPassword = require("../utils/emailService");
  * @swagger
  * /api/employee/me/{id}:
  *  get:
- *    description: Use to request the data of the employee
+ *    description+: Use to request the data of the employee
  *    summary: Gets a user by ID.
  *    parameters:
  *    - in: path
@@ -98,9 +98,11 @@ router.post("/register", async (req, res) => {
   employee = new Employee(
     _.pick(req.body, ["name", "email", "password", "phoneNumber"])
   );
+
   const salt = await bcrypt.genSalt(10);
   employee.password = await bcrypt.hash(employee.password, salt);
   await employee.save();
+
   const profile = new Profile({
     employee_id: employee._id,
     projects: [],
@@ -109,8 +111,10 @@ router.post("/register", async (req, res) => {
     languages: [],
     skills: [],
   });
+
   await profile.save();
   const token = employee.generateAuthToken();
+
   res
     .header("x-auth-token", token)
     .send(_.pick(employee, ["_id", "name", "email"]));

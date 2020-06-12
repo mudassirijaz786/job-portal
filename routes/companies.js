@@ -4,18 +4,25 @@ const jwt = require("jsonwebtoken");
 const config = require("config");
 const _ = require("lodash");
 const express = require("express");
-const { Company } = require("../models/company");
+const { Company, validate } = require("../models/company");
 const router = express.Router();
 const Joi = require("joi");
 
 // getting current company
-router.get("/:id", auth, async (req, res) => {
-  const company = await Company.findById(req.params.id).select("-password");
-  res.json({ currentCompany: company });
+router.get("/me/:id", auth, async (req, res) => {
+  const company = await Company.findById(req.params.id).select("-password ");
+  if (company) {
+    res.json({ data: company });
+  } else {
+    res.status(400).json({ message: "Not Found!" });
+  }
 });
 
 // login
 router.post("/login", async (req, res) => {
+  const { error } = validateLogin(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
   let company = await Company.findOne({ email: req.body.email });
   if (!company)
     return res.status(400).json({ error: "Invalid email or password." });
@@ -33,6 +40,9 @@ router.post("/login", async (req, res) => {
 
 // register
 router.post("/register", async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
   let company = await Company.findOne({ email: req.body.email });
   if (company)
     return res.status(400).json({
@@ -101,5 +111,28 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
   }
   res.json({ message: "An email with the link has been forwarded to you.." });
 });
+
+// function to validate login params
+validateLogin = (req) => {
+  const passwordReg = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+  const schema = {
+    email: Joi.string().min(5).max(255).required().email(),
+    password: Joi.string()
+      .regex(RegExp(passwordReg))
+      .required()
+      .options({
+        language: {
+          string: {
+            regex: {
+              base:
+                "must contains 8 digits, one lower case, one upper case and one special character",
+            },
+          },
+        },
+      }),
+  };
+
+  return Joi.validate(req, schema);
+};
 
 module.exports = router;
