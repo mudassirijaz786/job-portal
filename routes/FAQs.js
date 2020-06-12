@@ -120,7 +120,7 @@ router.post("/", auth, async (req, res) => {
 });
 
 //updating a faq
-// FIXME: status is not updating to true
+// FIXME: api-docs
 /**
  * @swagger
  *  /api/faq/{id}:
@@ -146,37 +146,23 @@ router.post("/", auth, async (req, res) => {
  *      content:
  *        application/json:
  *          schema:
- *            $ref: '#/definitions/faq'
  *    responses:
  *      '200':
  *        description: A successful response message in json indicating faq has been updated successfully
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
- *definitions:
- *  faq:
- *    type: object
- *    required:
- *    - question
- *    - answer
- *    properties:
- *     question:
- *      type: string
- *     answer:
- *      type: string
- *
  */
 router.put("/:id", auth, async (req, res) => {
   const faq = req.body.faq;
   const faqs = await FAQs.findByIdAndUpdate(
     req.params.id,
-    { $set: { faq } },
+    { $set: faq },
     { new: true }
   );
   res.json({ message: "faqs has been updated and successfully", data: faqs });
 });
 
 // deleting a faq
-// FIXME: problem in it, Cast to ObjectId failed for value "{id}" at path "_id" for model "FAQs"
 /**
  * @swagger
  * /api/faq/{id}:
@@ -191,7 +177,7 @@ router.put("/:id", auth, async (req, res) => {
  *      required: true
  *      description: jwt token(JWT).
  *    - in: path
- *      name: id of the faq
+ *      name: id
  *      type: string
  *      required: true
  *      description:  Object ID of the faq to delete

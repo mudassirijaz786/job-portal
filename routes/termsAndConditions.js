@@ -135,7 +135,7 @@ router.post("/", auth, async (req, res) => {
  *      required: true
  *      description: jwt token(JWT).
  *    - in: path
- *      name: id of the terms And Condition
+ *      name: id
  *      type: string
  *      required: true
  *      description: id of the terms And Condition which is going to be updated
@@ -156,7 +156,7 @@ router.post("/", auth, async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.put("/:id", auth, async (req, res) => {
-  const description = req.body.description;
+  const { description } = req.body;
   const tac = await TAC.findByIdAndUpdate(
     req.params.id,
     { $set: description },
@@ -169,7 +169,6 @@ router.put("/:id", auth, async (req, res) => {
 });
 
 // deleting a tac
-// FIXME: problem in it, Cast to ObjectId failed for value "{id}" at path "_id" for model "FAQs"
 /**
  * @swagger
  * /api/termsAndCondition/{id}:
@@ -184,7 +183,7 @@ router.put("/:id", auth, async (req, res) => {
  *      required: true
  *      description: jwt token(JWT).
  *    - in: path
- *      name: id of the faq
+ *      name: id
  *      type: string
  *      required: true
  *      description:  Object ID of the faq to delete

@@ -37,12 +37,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // getting all jobs
-/**
- * @swagger
- * tags:
- *   name: Job
- *   description: Job management
- */
+
 /**
  * @swagger
  * /api/job:
@@ -65,22 +60,24 @@ router.get("/", async (req, res) => {
 // appied jobs for a customer
 router.get("/appliedJobs/:id", async (req, res) => {
   const jobs = await JobsApplied.find({ applied_by: req.params.id })
-    .populate("jobs_id")
+    .populate("Job")
     .exec();
   res.send(jobs);
 });
 
-// :TODO: searching on title, area etc
 // searching a job
 router.get("/searchjob/:id", async (req, res) => {
   const jobs = await Job.find();
   const query = req.params.id.toLowerCase();
   var foundedJobs = [];
-
   jobs.forEach((job) => {
     if (job.title.toLowerCase().includes(query)) {
       foundedJobs.push(job);
-    } else if (job.location.toLowerCase().includes(query)) {
+    } else if (job.city.toLowerCase().includes(query)) {
+      foundedJobs.push(job);
+    } else if (job.area.toLowerCase().includes(query)) {
+      foundedJobs.push(job);
+    } else if (job.description.toLowerCase().includes(query)) {
       foundedJobs.push(job);
     }
   });
@@ -167,21 +164,22 @@ router.post("/postNewJob", auth, async (req, res) => {
   res.json({ message: "Job has been posted successfully", data: job });
 });
 
-// FIXME: updation don't work
 router.put("/:id", auth, async (req, res) => {
-  const { error } = validate(req.body);
+  const { job } = req.body;
+  const { error } = validate(job);
   if (error) return res.status(400).send(error.details[0].message);
 
-  // TODO: if id not found then say you cannot update this job else update it
-  const job = req.body;
+  try {
+    const jobs = await Job.findByIdAndUpdate(
+      req.params.id,
+      { $set: job },
+      { new: true }
+    );
 
-  const jobs = await Job.findByIdAndUpdate(
-    req.params.id,
-    { $set: { job } },
-    { new: true }
-  );
-
-  res.json({ message: "Job has been updateed successfully", data: jobs });
+    res.json({ message: "Job has been updateed successfully", data: jobs });
+  } catch (error) {
+    res.status(400).json({ message: "Invalid id. Job not found" });
+  }
 });
 
 // deletion of job
@@ -200,7 +198,7 @@ router.put("/:id", auth, async (req, res) => {
  *      required: true
  *      description: jwt token(JWT).
  *    - in: path
- *      name: id of the faq
+ *      name: id
  *      type: string
  *      required: true
  *      description:  Object ID of the faq to delete
