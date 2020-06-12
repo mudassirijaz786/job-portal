@@ -123,7 +123,7 @@ router.post("/", auth, async (req, res) => {
 // FIXME: status is not updating to true
 /**
  * @swagger
- * /api/faq/{id}:
+ *  /api/faq/{id}:
  *  put:
  *    description: Use to set the faq updated
  *    summary:  Use to update the faq
@@ -135,28 +135,35 @@ router.post("/", auth, async (req, res) => {
  *      required: true
  *      description: jwt token(JWT).
  *    - in: path
- *      name: id of the message
+ *      name: id
  *      type: string
  *      required: true
  *      description:  Object ID of the messgae to set read
  *    - in: body
  *      name: faq
+ *      required: true
  *      description: The faq to update.
- *      schema:
- *        type: object
- *        required:
- *        - question
- *        - answer
- *        properties:
- *          question:
- *            type: string
- *          answer:
- *            type: string
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/definitions/faq'
  *    responses:
  *      '200':
  *        description: A successful response message in json indicating faq has been updated successfully
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
+ *definitions:
+ *  faq:
+ *    type: object
+ *    required:
+ *    - question
+ *    - answer
+ *    properties:
+ *     question:
+ *      type: string
+ *     answer:
+ *      type: string
+ *
  */
 router.put("/:id", auth, async (req, res) => {
   const faq = req.body.faq;
