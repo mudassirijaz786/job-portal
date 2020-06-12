@@ -10,12 +10,20 @@ const router = express.Router();
 const Joi = require("joi");
 
 //fetching all the admins
+
+/**
+ * @swagger
+ * tags:
+ *   name: Admins
+ *   description: admin management
+ */
 /**
  * @swagger
  * /api/admin:
  *  get:
  *    description: Use to request all admins
  *    summary:  Use to request all admins
+ *    tags: [Admins]
  *    parameters:
  *    - in: header
  *      name: x-auth-token
@@ -46,6 +54,7 @@ router.get("/", auth, admin, async (req, res) => {
  *  get:
  *    description: Use to request a single admin
  *    summary:  Use to request a single admin
+ *    tags: [Admins]
  *    parameters:
  *    - in: header
  *      name: x-auth-token
@@ -81,6 +90,7 @@ router.get("/me/:id", auth, async (req, res) => {
  *  post:
  *    description: use to login admin into the system
  *    summary: login employee into the system using email and password.
+ *    tags: [Admins]
  *    parameters:
  *    - in: body
  *      name: user
@@ -124,6 +134,7 @@ router.post("/login", async (req, res) => {
  *  post:
  *    description: use to resister admin into the system
  *    summary: use to resister admin into the system.
+ *    tags: [Admins]
  *    parameters:
  *    - in: body
  *      name: user

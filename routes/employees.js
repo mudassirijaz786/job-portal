@@ -9,7 +9,12 @@ const { Profile } = require("../models/profile");
 const router = express.Router();
 const Joi = require("joi");
 const sendEmailForResetPassword = require("../utils/emailService");
-
+/**
+ * @swagger
+ * tags:
+ *   name: Employee
+ *   description: Employee management
+ */
 // getting current employee
 /**
  * @swagger
@@ -17,6 +22,7 @@ const sendEmailForResetPassword = require("../utils/emailService");
  *  get:
  *    description+: Use to request the data of the employee
  *    summary: Gets a user by ID.
+ *    tags: [Employee]
  *    parameters:
  *    - in: path
  *      name: id
@@ -53,6 +59,7 @@ router.get("/me/:id", auth, async (req, res) => {
  *  post:
  *    description: use to login employee into the system
  *    summary: login employee into the system using email and password.
+ *    tags: [Employee]
  *    parameters:
  *    - in: body
  *      name: user
@@ -99,6 +106,7 @@ router.post("/login", async (req, res) => {
  *  post:
  *    description: use to resister employee into the system
  *    summary: use to resister employee into the system.
+ *    tags: [Employee]
  *    parameters:
  *    - in: body
  *      name: user
@@ -109,12 +117,15 @@ router.post("/login", async (req, res) => {
  *        - email
  *        - password
  *        - name
+ *        - phoneNumber
  *        properties:
  *          name:
  *            type: string
  *          email:
  *            type: string
  *          password:
+ *            type: string
+ *          phoneNumber:
  *            type: string
  *    responses:
  *      '200':
@@ -154,7 +165,7 @@ router.post("/register", async (req, res) => {
 
   res
     .header("x-auth-token", token)
-    .send(_.pick(employee, ["_id", "name", "email"]));
+    .send(_.pick(employee, ["_id", "name", "email", "phoneNumber"]));
 });
 
 // new password after resetting
@@ -165,6 +176,7 @@ router.post("/register", async (req, res) => {
  *  post:
  *    description: use to reset the password after clicked on the link
  *    summary: use to reset the password after clicked on the link
+ *    tags: [Employee]
  *    parameters:
  *    - in: body
  *      name: user
@@ -214,6 +226,7 @@ router.post("/resetPassword/newPassword", async (req, res) => {
  *  post:
  *    description: use to sending email on password reset
  *    summary: use to sending email on password reset
+ *    tags: [Employee]
  *    parameters:
  *    - in: body
  *      name: user

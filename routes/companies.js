@@ -8,19 +8,51 @@ const { Company, validate } = require("../models/company");
 const router = express.Router();
 const Joi = require("joi");
 
-// getting a company
 /**
  * @swagger
- * /api/company/me/{id}:
+ * tags:
+ *   name: Company
+ *   description: Company management
+ */
+// getting current company
+/**
+ * @swagger
+ * /api/company:
  *  get:
- *    description: get the company specified by an id
- *    summary:  use to request a single company
+ *    description: Use to request all companys
+ *    summary:  Use to request all companys
+ *    tags: [Company]
  *    parameters:
  *    - in: header
  *      name: x-auth-token
  *      type: string
  *      required: true
- *      description: jwt token
+ *      description: jwt token (JWT).
+ *    responses:
+ *      '200':
+ *        description: A successful response containg all companys in JSON
+ *      '400':
+ *        description: message in json format indicating  not found!
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
+ */
+router.get("/", auth, async (req, res) => {
+  const companies = await Company.find().select("-password ");
+  res.json({ data: companies });
+});
+/**
+ * @swagger
+ * /api/company/me/{id}:
+ *  get:
+ *    description: Use to request a single company
+ *    summary:  Use to request a single company
+ *    tags: [Company]
+ *    parameters:
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg iscompany field in JWT.
  *    - in: path
  *      name: id
  *      type: string
@@ -28,14 +60,14 @@ const Joi = require("joi");
  *      description: Object ID of the company to get.
  *    responses:
  *      '200':
- *        description: A successful response containg a company in JSON
+ *        description: A successful response containg all companys in JSON
  *      '400':
  *        description: message in json format indicating  not found!
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.get("/me/:id", auth, async (req, res) => {
-  const company = await Company.findById(req.params.id).select("-password ");
+  const company = await Company.findById(req.params.id).select("-password");
   if (company) {
     res.json({ data: company });
   } else {
@@ -50,10 +82,11 @@ router.get("/me/:id", auth, async (req, res) => {
  *  post:
  *    description: use to login company into the system
  *    summary: login company into the system using email and password.
+ *    tags: [Company]
  *    parameters:
  *    - in: body
- *      name: company
- *      description: The company to login.
+ *      name: user
+ *      description: The user to login.
  *      schema:
  *        type: object
  *        required:
@@ -90,57 +123,56 @@ router.post("/login", async (req, res) => {
 });
 
 // register
-// FIXME: just a syntax error
-// /**
-//  * @swagger
-//  * /api/company/register:
-//  *  post:
-//  *    description: use to resister company into the system
-//  *    summary: use to resister company into the system.
-//  *    parameters:
-//  *    - in: body
-//  *      name: company
-//  *      description: The company to login.
-//  *      schema:
-//  *        type: object
-//  *        required:
-//  *        - email
-//  *        - password
-//  *        - name
-//  *        - ceo
-//  *        - address
-//  *        - city
-//  *        - description
-//  *        - phoneNumber
-//  *        - url
-//  *        - noOfEmployees
-//  *        properties:
-//  *          name:
-//  *            type: string
-//  *          email:
-//  *            type: string
-//  *          password:
-//  *            type: string
-//  *          ceo:
-//  *            type: string
-//  *          address:
-//  *            type: string
-//  *          city:
-//  *            type: string
-//  *          description
-//  *            type: string
-//  *          phoneNumber:
-//  *            type: string
-//  *          url:
-//  *            type: string
-//  *          noOfEmployees:
-//  *            type: string
-//  *    responses:
-//  *      '200':
-//  *        description: jwt token for that particular  new admin.
-//  *      '400':
-//  *        description: message in json format indicating admin with email already exists.
-//  */
+/**
+ * @swagger
+ * /api/company/register:
+ *  post:
+ *    description: use to resister company into the system
+ *    summary: use to resister company into the system.
+ *    tags: [Company]
+ *    parameters:
+ *    - in: body
+ *      name: user
+ *      description: The user to login.
+ *      schema:
+ *        type: object
+ *        required:
+ *        - email
+ *        - password
+ *        - name
+ *        - ceo
+ *        - address
+ *        - description
+ *        - phoneNumber
+ *        - url
+ *        - noOfEmployees
+ *        properties:
+ *          name:
+ *            type: string
+ *          email:
+ *            type: string
+ *          password:
+ *            type: string
+ *          ceo:
+ *            type: string
+ *          city:
+ *            type: string
+ *          address:
+ *            type: string
+ *          description:
+ *            type: string
+ *          phoneNumber:
+ *            type: string
+ *          url:
+ *            type: string
+ *          noOfEmployees:
+ *            type: string
+ *    responses:
+ *      '200':
+ *        description: jwt token for that particular  new company.
+ *      '400':
+ *        description: message in json format indicating company with email already exists.
+ */
 router.post("/register", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -182,10 +214,11 @@ router.post("/register", async (req, res) => {
  *  post:
  *    description: use to reset the password after clicked on the link
  *    summary: use to reset the password after clicked on the link
+ *    tags: [Company]
  *    parameters:
  *    - in: body
- *      name: company
- *      description: company details.
+ *      name: user
+ *      description: user details.
  *      schema:
  *        type: object
  *        required:
@@ -198,7 +231,7 @@ router.post("/register", async (req, res) => {
  *            type: string
  *    responses:
  *      '200':
- *        description: jwt token for that particular company.
+ *        description: jwt token for that particular emoloyee.
  *      '400':
  *        description: message in json format indicating Invalid id.
  */
@@ -219,7 +252,10 @@ router.post("/resetPassword/newPassword", async (req, res) => {
       { new: true }
     );
     const token = company.generateAuthToken();
-    res.json({ token });
+    res.json({
+      message: "password has been updated successfully",
+      data: token,
+    });
   }
 });
 
@@ -230,6 +266,7 @@ router.post("/resetPassword/newPassword", async (req, res) => {
  *  post:
  *    description: use to sending email on password reset
  *    summary: use to sending email on password reset
+ *    tags: [Company]
  *    parameters:
  *    - in: body
  *      name: user
