@@ -8,6 +8,7 @@ const {
   validateLanguage,
   validateEducation,
   validateProject,
+  validationExperience,
 } = require("../models/profile");
 
 const router = express.Router();
@@ -180,6 +181,7 @@ router.put("/addSkill/:id", auth, async (req, res) => {
 });
 
 // pulling project object
+// TODO: testing
 router.delete("/deleteProject/:id", auth, async (req, res) => {
   const { project } = req.body;
   const profile = await Profile.findOneAndUpdate(
@@ -198,6 +200,7 @@ router.delete("/deleteProject/:id", auth, async (req, res) => {
 });
 
 // pulling experience object
+// TODO: testing
 router.put("/deleteExperince/:id", auth, async (req, res) => {
   const { experience } = req.body;
   const profile = await Profile.findOneAndUpdate(
@@ -216,6 +219,7 @@ router.put("/deleteExperince/:id", auth, async (req, res) => {
 });
 
 // pulling education object
+// TODO: testing
 router.delete("/deleteEducation/:id", auth, async (req, res) => {
   const { education } = req.body;
   const profile = await Profile.findOneAndUpdate(
@@ -232,7 +236,7 @@ router.delete("/deleteEducation/:id", auth, async (req, res) => {
   res.json({ message: "Education has been pulled out successfully" });
 });
 
-// TODO: testing on postman
+// TODO: testing
 router.delete("/deleteSkill/:id", auth, async (req, res) => {
   const { skill } = req.body;
   const profile = await Profile.findOneAndUpdate(
@@ -248,7 +252,7 @@ router.delete("/deleteSkill/:id", auth, async (req, res) => {
   res.json({ message: "Skill has been pulled out successfully" });
 });
 
-// TODO: testing on postman
+// TODO: testing
 router.delete("/deleteLanguage/:id", auth, async (req, res) => {
   const { language } = req.body;
   const profile = await Profile.findOneAndUpdate(
@@ -286,6 +290,8 @@ router.put("/updateProject/:id", auth, async (req, res) => {
 // updating experience object
 router.put("/updateExperince/:id", auth, async (req, res) => {
   const { experience } = req.body;
+  const { error } = validationExperience(experience);
+  if (error) return res.status(400).send(error.details[0].message);
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id, "experiences._id": experience._id },
 
@@ -309,6 +315,8 @@ router.put("/updateExperince/:id", auth, async (req, res) => {
 // updating education object
 router.put("/updateEducation/:id", auth, async (req, res) => {
   const { education } = req.body;
+  const { error } = validateEducation(education);
+  if (error) return res.status(400).send(error.details[0].message);
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id, "educations._id": education._id },
     {
@@ -331,6 +339,8 @@ router.put("/updateEducation/:id", auth, async (req, res) => {
 // updating skill object
 router.put("/updateSkill/:id", auth, async (req, res) => {
   const { skill } = req.body;
+  const { error } = validateSkill(skill);
+  if (error) return res.status(400).send(error.details[0].message);
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id, "skills._id": skill._id },
     {
@@ -350,6 +360,8 @@ router.put("/updateSkill/:id", auth, async (req, res) => {
 // updating laguage object
 router.put("/updateLanguage/:id", auth, async (req, res) => {
   const { language } = req.body;
+  const { error } = validateLanguage(language);
+  if (error) return res.status(400).send(error.details[0].message);
   console.log(language);
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id, "languages._id": language._id },

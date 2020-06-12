@@ -261,6 +261,61 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
   res.json({ message: "An email with the link has been forwarded to you" });
 });
 
+router.delete("/employeeRemove/:id", auth, async (req, res) => {
+  const employee = await Employee.findByIdAndRemove(req.params.id);
+  if (!employee) {
+    return res.status(400).json({ error: "employee not found" });
+  } else {
+    res.json({ message: "employee has been deleted successfully" });
+  }
+});
+
+// searching an employee
+router.get("/searchEmployee/:id", async (req, res) => {
+  const employees = await Employee.find();
+  const query = req.params.id.toLowerCase();
+  var foundedEmployee = [];
+  employees.forEach((employee) => {
+    if (employee.name.toLowerCase().includes(query)) {
+      foundedEmployee.push(employee);
+    }
+  });
+  res.json({ data: foundedEmployee });
+});
+
+// FIXME: not working properly
+router.put("/employeeUpdate/:id", auth, async (req, res) => {
+  const { employee } = req.body;
+  const { error } = validate(employee);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  try {
+    const employees = await Employee.findByIdAndUpdate(
+      req.params.id,
+      { $set: employee },
+      { new: true }
+    );
+
+    res.json({
+      message: "employee has been updateed successfully",
+      data: employees,
+    });
+  } catch (error) {
+    res.status(400).json({ message: "Invalid id. employee not found" });
+  }
+});
+
+router.post("/employeeBlocking/:id", auth, async (req, res) => {
+  const employee = await Employee.findById({ _id: req.params.id });
+  await Employee.updateOne(
+    { _id: req.params.id },
+    { $set: { blocked: true } },
+    { new: true }
+  );
+
+  res.json({ message: `${employee.name} is blocked` });
+});
+
 // function to validate login params
 validateLogin = (req) => {
   const schema = {
