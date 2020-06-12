@@ -8,11 +8,13 @@ const { Admin } = require("../models/admin");
 const router = express.Router();
 
 // getting current admin
-router.get("/me", auth, async (req, res) => {
-  const token = req.header("x-auth-token");
-  const decoded = jwt.verify(token, config.get("jwtPrivateKey"));
-  const admin = await Admin.findById(decoded._id).select("-password ");
-  res.json({ currentAdmin: admin });
+router.get("/me/:id", auth, async (req, res) => {
+  const admin = await Admin.findById(req.params.id).select("-password ");
+  if (admin) {
+    res.json({ data: admin });
+  } else {
+    res.status(400).json({ message: "Not Found!" });
+  }
 });
 
 // login
