@@ -4,22 +4,22 @@ const { TAC } = require("../models/termsAndConditions");
 const express = require("express");
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/", auth, async (req, res) => {
   const tac = await TAC.find();
   res.send(tac);
 });
-router.get("/:id", async (req, res) => {
+router.get("/:id", auth, async (req, res) => {
   const tac = await TAC.findById(req.params.id);
   res.send(tac);
 });
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
   const tac = new TAC(_.pick(req.body, ["description"]));
   await tac.save();
   res.json({ message: "termsAndCondition has been saved successfully" });
 });
 
 // FIXME: updation not working
-router.put("/:id", async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   const description = req.body.description;
   const tac = await TAC.findByIdAndUpdate(
     req.params.id,
@@ -29,7 +29,7 @@ router.put("/:id", async (req, res) => {
   res.json({ message: "termsAndCondition has been updated and successfully" });
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   const tac = await TAC.findByIdAndRemove(req.params.id);
   res.json({ message: "termsAndCondition has been deleted successfully" });
 });
