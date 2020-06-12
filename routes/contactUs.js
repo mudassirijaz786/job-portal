@@ -35,6 +35,7 @@ router.get("/", auth, async (req, res) => {
   res.json({ data: result });
 });
 
+// FIXME: problem in it
 // getting undreadMessages by id
 /**
  * @swagger
@@ -72,7 +73,14 @@ router.get("/unreadMessages/:id", auth, async (req, res) => {
   const messages = await ContactUs.find({ status: true });
   res.json({ length: messages.length });
 });
-/* @swagger
+/**
+ * @swagger
+ * tags:
+ *   name: ContactUs
+ *   description: ContactUs management
+ */
+/**
+ * @swagger
  * /api/contact/me/{id}:
  *  get:
  *    description: Use to request a single contact
@@ -155,6 +163,8 @@ router.post("/", async (req, res) => {
 
   res.json({ data: result });
 });
+
+// FIXME: problem in it
 /**
  * @swagger
  * /api/contact/{id}:
@@ -169,7 +179,7 @@ router.post("/", async (req, res) => {
  *      required: true
  *      description: jwt token(JWT).
  *    - in: path
- *      name: idof the message
+ *      name: id of the message
  *      type: string
  *      required: true
  *      description:  Object ID of the messgae to delete
