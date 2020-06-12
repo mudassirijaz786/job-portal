@@ -8,7 +8,32 @@ const { Company, validate } = require("../models/company");
 const router = express.Router();
 const Joi = require("joi");
 
-// getting current company
+// getting a company
+/**
+ * @swagger
+ * /api/company/me/{id}:
+ *  get:
+ *    description: get the company specified by an id
+ *    summary:  use to request a single company
+ *    parameters:
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: Object ID of the company to get.
+ *    responses:
+ *      '200':
+ *        description: A successful response containg a company in JSON
+ *      '400':
+ *        description: message in json format indicating  not found!
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
+ */
 router.get("/me/:id", auth, async (req, res) => {
   const company = await Company.findById(req.params.id).select("-password ");
   if (company) {
@@ -19,6 +44,32 @@ router.get("/me/:id", auth, async (req, res) => {
 });
 
 // login
+/**
+ * @swagger
+ * /api/company/login:
+ *  post:
+ *    description: use to login company into the system
+ *    summary: login company into the system using email and password.
+ *    parameters:
+ *    - in: body
+ *      name: company
+ *      description: The company to login.
+ *      schema:
+ *        type: object
+ *        required:
+ *        - email
+ *        - password
+ *        properties:
+ *          email:
+ *            type: string
+ *          password:
+ *            type: string
+ *    responses:
+ *      '200':
+ *        description: jwt token for that particular user loged in.
+ *      '400':
+ *        description: message in json format Invalid email or password.
+ */
 router.post("/login", async (req, res) => {
   const { error } = validateLogin(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -39,6 +90,57 @@ router.post("/login", async (req, res) => {
 });
 
 // register
+// FIXME: just a syntax error
+// /**
+//  * @swagger
+//  * /api/company/register:
+//  *  post:
+//  *    description: use to resister company into the system
+//  *    summary: use to resister company into the system.
+//  *    parameters:
+//  *    - in: body
+//  *      name: company
+//  *      description: The company to login.
+//  *      schema:
+//  *        type: object
+//  *        required:
+//  *        - email
+//  *        - password
+//  *        - name
+//  *        - ceo
+//  *        - address
+//  *        - city
+//  *        - description
+//  *        - phoneNumber
+//  *        - url
+//  *        - noOfEmployees
+//  *        properties:
+//  *          name:
+//  *            type: string
+//  *          email:
+//  *            type: string
+//  *          password:
+//  *            type: string
+//  *          ceo:
+//  *            type: string
+//  *          address:
+//  *            type: string
+//  *          city:
+//  *            type: string
+//  *          description
+//  *            type: string
+//  *          phoneNumber:
+//  *            type: string
+//  *          url:
+//  *            type: string
+//  *          noOfEmployees:
+//  *            type: string
+//  *    responses:
+//  *      '200':
+//  *        description: jwt token for that particular  new admin.
+//  *      '400':
+//  *        description: message in json format indicating admin with email already exists.
+//  */
 router.post("/register", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -74,6 +176,32 @@ router.post("/register", async (req, res) => {
 });
 
 // new password after resetting
+/**
+ * @swagger
+ * /api/company/resetPassword/newPassword:
+ *  post:
+ *    description: use to reset the password after clicked on the link
+ *    summary: use to reset the password after clicked on the link
+ *    parameters:
+ *    - in: body
+ *      name: company
+ *      description: company details.
+ *      schema:
+ *        type: object
+ *        required:
+ *        - _id
+ *        - newPassword
+ *        properties:
+ *          _id:
+ *            type: string
+ *          newPassword:
+ *            type: string
+ *    responses:
+ *      '200':
+ *        description: jwt token for that particular company.
+ *      '400':
+ *        description: message in json format indicating Invalid id.
+ */
 router.post("/resetPassword/newPassword", async (req, res) => {
   const companyId = await Company.findById(req.body._id);
   if (!companyId) {
@@ -96,6 +224,29 @@ router.post("/resetPassword/newPassword", async (req, res) => {
 });
 
 // sending email on password reset
+/**
+ * @swagger
+ * /api/company/resetPassword/sendEmail:
+ *  post:
+ *    description: use to sending email on password reset
+ *    summary: use to sending email on password reset
+ *    parameters:
+ *    - in: body
+ *      name: user
+ *      description: To send link for reset password on the email.
+ *      schema:
+ *        type: object
+ *        required:
+ *        - email
+ *        properties:
+ *         email:
+ *            type: string
+ *    responses:
+ *      '200':
+ *        description: message in json formet indicating An email with the link has been forwarded to you.
+ *      '400':
+ *        description: message in json format indicating Invalid email.
+ */
 router.post("/resetPassword/sendEmail", async (req, res) => {
   const email = req.body.email;
   const company = await Company.findOne({ email });
