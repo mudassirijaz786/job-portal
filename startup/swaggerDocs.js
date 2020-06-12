@@ -15,7 +15,7 @@ module.exports = (app) => {
         servers: ["http://localhost:3900"],
       },
     },
-    apis: ["./routes/*.js"],
+    apis: ["./routes/*.js", "./apis-docs/*.yaml"],
   };
   const swaggerDocs = swaggerJsDoc(swaggerOptions);
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));

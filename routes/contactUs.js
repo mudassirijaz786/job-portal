@@ -35,7 +35,6 @@ router.get("/", auth, async (req, res) => {
   res.json({ data: result });
 });
 
-// FIXME: problem in it
 // getting undreadMessages by id
 /**
  * @swagger
@@ -45,10 +44,10 @@ router.get("/", auth, async (req, res) => {
  */
 /**
  * @swagger
- * /api/contact/unreadMessages/{id}:
+ * /api/contact/unreadMessages:
  *  get:
- *    description: get the unread message specified by an id
- *    summary:  use to request a single contact us message
+ *    description: get the unread messages
+ *    summary:  use to request get the unread messages
  *    tags: [ContactUs]
  *    parameters:
  *    - in: header
@@ -56,29 +55,22 @@ router.get("/", auth, async (req, res) => {
  *      type: string
  *      required: true
  *      description: jwt token
- *    - in: path
- *      name: id
- *      type: string
- *      required: true
- *      description: Object ID of the message to read.
  *    responses:
  *      '200':
- *        description: A successful response containg a contact us message in JSON
+ *        description: A successful response containg a contact us message(Unread) in JSON
  *      '400':
  *        description: message in json format indicating  not found!
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.get("/unreadMessages/:id", auth, async (req, res) => {
-  const messages = await ContactUs.find({ status: true });
-  res.json({ length: messages.length });
+router.get("/unreadMessages", auth, async (req, res) => {
+  const messages = await ContactUs.find({ read: false });
+  res.json({ messages: messages });
+  if (!messages) {
+    res.status(400).json({ message: "not found" });
+  }
 });
-/**
- * @swagger
- * tags:
- *   name: ContactUs
- *   description: ContactUs management
- */
+
 /**
  * @swagger
  * /api/contact/me/{id}:
@@ -164,10 +156,9 @@ router.post("/", async (req, res) => {
   res.json({ data: result });
 });
 
-// FIXME: problem in it
 /**
  * @swagger
- * /api/contact/{id}:
+ * /api/contact/delete/{id}:
  *  delete:
  *    description: Use to delete the message
  *    summary:  Use to delete the message
@@ -179,7 +170,7 @@ router.post("/", async (req, res) => {
  *      required: true
  *      description: jwt token(JWT).
  *    - in: path
- *      name: id of the message
+ *      name: id
  *      type: string
  *      required: true
  *      description:  Object ID of the messgae to delete
@@ -189,15 +180,15 @@ router.post("/", async (req, res) => {
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.delete("/:id", auth, async (req, res) => {
+router.delete("/delete/:id", auth, async (req, res) => {
+  console.log(req.params.id);
   const result = await ContactUs.findByIdAndRemove(req.params.id);
   res.json({ message: "Message Deleted successfully" });
 });
 
-// FIXME: status is not updating to true
 /**
  * @swagger
- * /api/contact/{id}:
+ * /api/contact/read/{id}:
  *  put:
  *    description: Use to set the message status to read.
  *    summary:  Use to set the message status to read.
@@ -209,7 +200,7 @@ router.delete("/:id", auth, async (req, res) => {
  *      required: true
  *      description: jwt token(JWT).
  *    - in: path
- *      name: id of the message
+ *      name: id
  *      type: string
  *      required: true
  *      description:  Object ID of the messgae to set read
@@ -224,7 +215,7 @@ router.put("/read/:id", auth, async (req, res) => {
     req.params.id,
     {
       $set: {
-        status: true,
+        read: true,
       },
     },
     { new: true }

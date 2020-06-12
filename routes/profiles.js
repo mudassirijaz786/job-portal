@@ -12,6 +12,7 @@ const {
 
 const router = express.Router();
 
+// :TODO: validations in the update all methoods
 // my profile
 router.get("/me/:id", auth, async (req, res) => {
   const profile = await Profile.findOne({ employee_id: req.params.id });
@@ -157,9 +158,9 @@ router.post("/addLanguage/:id", auth, async (req, res) => {
 });
 
 // adding skill to skills array
-// :FIXME: adding all messages,,,
-router.post("/addSkill/:id", auth, async (req, res) => {
-  const { error } = validateSkill(req.body.skill);
+router.put("/addSkill/:id", auth, async (req, res) => {
+  const { skill } = req.body;
+  const { error } = validateSkill(skill);
   if (error) {
     return res.status(400).send(error.details[0].message);
   } else {
@@ -167,85 +168,80 @@ router.post("/addSkill/:id", auth, async (req, res) => {
       { employee_id: req.params.id },
       {
         $push: {
-          skills: req.body.skill,
+          skills: skill,
         },
       },
 
       { new: true }
     );
-
-    res.json({ message: "Skill has been saved successfully", data: profile });
+    console.log(profile);
+    res.json({ message: "Skill has been saved successfully" });
   }
 });
 
 // pulling project object
-router.put("/deleteProject/:id", auth, async (req, res) => {
+router.delete("/deleteProject/:id", auth, async (req, res) => {
+  const { project } = req.body;
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
-
     {
       $pull: {
         projects: {
-          _id: req.body.project._id,
+          _id: project._id,
         },
       },
     },
 
     { new: true }
   );
-
   res.json({ message: "Project has been pulled out successfully" });
 });
 
 // pulling experience object
 router.put("/deleteExperince/:id", auth, async (req, res) => {
+  const { experience } = req.body;
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
-
     {
       $pull: {
         experiences: {
-          _id: req.body.experience._id,
+          _id: experience._id,
         },
       },
     },
 
     { new: true }
   );
-
   res.json({ message: "Experience has been pulled out successfully" });
 });
 
 // pulling education object
-router.put("/deleteEducation/:id", auth, async (req, res) => {
+router.delete("/deleteEducation/:id", auth, async (req, res) => {
+  const { education } = req.body;
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
-
     {
       $pull: {
         educations: {
-          _id: req.body.education._id,
+          _id: education._id,
         },
       },
     },
-
     { new: true }
   );
-
   res.json({ message: "Education has been pulled out successfully" });
 });
 
 // TODO: testing on postman
-router.put("/deleteSkill/:id", auth, async (req, res) => {
+router.delete("/deleteSkill/:id", auth, async (req, res) => {
+  const { skill } = req.body;
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
-
     {
       $pull: {
-        skills: { _id: req.body.skill._id },
+        skills: { _id: skill._id },
       },
     },
-
     { new: true }
   );
 
@@ -253,29 +249,27 @@ router.put("/deleteSkill/:id", auth, async (req, res) => {
 });
 
 // TODO: testing on postman
-router.put("/deleteLanguage/:id", auth, async (req, res) => {
+router.delete("/deleteLanguage/:id", auth, async (req, res) => {
+  const { language } = req.body;
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id },
-
     {
       $pull: {
         languages: {
-          _id: req.body.language._id,
+          _id: language._id,
         },
       },
     },
-
     { new: true }
   );
-
+  console.log(profile);
   res.json({ message: "Language has been pulled out successfully" });
 });
 
 // updating project object
-router.post("/updateProject/:id", auth, async (req, res) => {
+router.put("/updateProject/:id", auth, async (req, res) => {
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id, "projects._id": project._id },
-
     {
       $set: {
         "projects.$.name": req.body.project.name,
@@ -290,7 +284,7 @@ router.post("/updateProject/:id", auth, async (req, res) => {
 });
 
 // updating experience object
-router.post("/updateExperince/:id", auth, async (req, res) => {
+router.put("/updateExperince/:id", auth, async (req, res) => {
   const { experience } = req.body;
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id, "experiences._id": experience._id },
@@ -309,12 +303,11 @@ router.post("/updateExperince/:id", auth, async (req, res) => {
 
     { new: true }
   );
-
   res.json({ message: "Experience has been updated and saved successfully" });
 });
 
 // updating education object
-router.post("/updateEducation/:id", auth, async (req, res) => {
+router.put("/updateEducation/:id", auth, async (req, res) => {
   const { education } = req.body;
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id, "educations._id": education._id },
@@ -336,29 +329,28 @@ router.post("/updateEducation/:id", auth, async (req, res) => {
 });
 
 // updating skill object
-router.post("/updateSkill/:id", auth, async (req, res) => {
+router.put("/updateSkill/:id", auth, async (req, res) => {
   const { skill } = req.body;
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id, "skills._id": skill._id },
-
     {
       $set: {
         "skills.$.name": skill.name,
         "skills.$.level": skill.level,
       },
     },
-
     { new: true }
   );
-
+  console.log(profile);
   res.json({
     message: "Skill has been updated and saved successfully",
   });
 });
 
 // updating laguage object
-router.post("/updateLanguage/:id", auth, async (req, res) => {
+router.put("/updateLanguage/:id", auth, async (req, res) => {
   const { language } = req.body;
+  console.log(language);
   const profile = await Profile.findOneAndUpdate(
     { employee_id: req.params.id, "languages._id": language._id },
     {
@@ -367,10 +359,9 @@ router.post("/updateLanguage/:id", auth, async (req, res) => {
         "languages.$.level": language.level,
       },
     },
-
     { new: true }
   );
-
+  console.log(profile);
   res.json({
     message: "Language has been updated and saved successfully",
   });
