@@ -11,7 +11,6 @@ const router = express.Router();
  *   name: FAQ
  *   description: FAQ management
  */
-// getting current company
 /**
  * @swagger
  * /api/faq:
@@ -66,7 +65,7 @@ router.get("/:id", async (req, res) => {
   if (faq) {
     res.json({ data: faq });
   } else {
-    res.status(400).json({ error: "faq not found" });
+    res.status(400).json({ notFound: "faq not found" });
   }
 });
 
