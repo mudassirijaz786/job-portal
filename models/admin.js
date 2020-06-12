@@ -33,10 +33,24 @@ adminSchema.methods.generateAuthToken = () => {
 const Admin = mongoose.model("Admin", adminSchema);
 
 validateAdmin = (admin) => {
+  const passwordReg = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
   const schema = {
-    // all validations goes here
+    name: Joi.string().min(2).max(50).required(),
+    email: Joi.string().min(5).max(255).required().email(),
+    password: Joi.string()
+      .regex(RegExp(passwordReg))
+      .required()
+      .options({
+        language: {
+          string: {
+            regex: {
+              base:
+                "must contains 8 digits, one lower case, one upper case and one special character",
+            },
+          },
+        },
+      }),
   };
-
   return Joi.validate(admin, schema);
 };
 

@@ -32,7 +32,7 @@ const sendEmailForResetPassword = require("../utils/emailService");
 router.get("/me/:id", auth, async (req, res) => {
   const employee = await Employee.findById(req.params.id).select("-password ");
   if (employee) {
-    res.json({ currentEmployee: employee });
+    res.json({ data: employee });
   } else {
     res.status(400).json({ message: "Not Found!" });
   }
@@ -134,6 +134,7 @@ router.post("/resetPassword/newPassword", async (req, res) => {
       { new: true }
     );
     const token = employee.generateAuthToken();
+
     res.json({ token });
   }
 });
@@ -142,7 +143,6 @@ router.post("/resetPassword/newPassword", async (req, res) => {
 router.post("/resetPassword/sendEmail", async (req, res) => {
   const email = req.body.email;
   const employee = await Employee.findOne({ email });
-  console.log(employee);
   if (!employee) {
     res.status(400).json({ message: "Invalid email" });
   } else {
@@ -153,14 +153,28 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
       employee._id
     );
   }
-  res.json({ message: "An email with the link has been forwarded to you.." });
+
+  res.json({ message: "An email with the link has been forwarded to you" });
 });
 
 // function to validate login params
 validateLogin = (req) => {
+  const passwordReg = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
   const schema = {
     email: Joi.string().min(5).max(255).required().email(),
-    password: Joi.string().min(5).max(255).required(),
+    password: Joi.string()
+      .regex(RegExp(passwordReg))
+      .required()
+      .options({
+        language: {
+          string: {
+            regex: {
+              base:
+                "must contains 8 digits, one lower case, one upper case and one special character",
+            },
+          },
+        },
+      }),
   };
 
   return Joi.validate(req, schema);
