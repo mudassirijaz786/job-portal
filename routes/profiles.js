@@ -1,18 +1,34 @@
 const auth = require("../middleware/auth");
 const _ = require("lodash");
 const express = require("express");
-const { Profile, validateSkill } = require("../models/profile");
+const {
+  Profile,
+  validateSkill,
+  validateProfile,
+  validateLanguage,
+  validateEducation,
+  validateProject,
+} = require("../models/profile");
 
 const router = express.Router();
 
 // my profile
 router.get("/me/:id", auth, async (req, res) => {
   const profile = await Profile.findOne({ employee_id: req.params.id });
+  if (profile) {
+    res.json({ data: profile });
+  } else {
+    res.status(400).json({ message: "Not Found!" });
+  }
+
   res.send(profile);
 });
 
 // profile creation
 router.post("/", auth, async (req, res) => {
+  const { error } = validateProfile(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
   const profile = new Profile(
     _.pick(req.body, [
       "employee_id",
@@ -26,7 +42,7 @@ router.post("/", auth, async (req, res) => {
   );
 
   await profile.save();
-  res.json({ message: "Profile has been saved successfully" });
+  res.json({ message: "Profile has been saved successfully", data: profile });
 });
 
 router.post("/summary/:id", auth, async (req, res) => {
@@ -47,69 +63,97 @@ router.post("/summary/:id", auth, async (req, res) => {
 
 // adding project to projects array
 router.post("/addProject/:id", auth, async (req, res) => {
-  const profile = await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
+  const { error } = validateProject(req.body.project);
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  } else {
+    const profile = await Profile.findOneAndUpdate(
+      { employee_id: req.params.id },
 
-    {
-      $push: {
-        projects: req.body.project,
+      {
+        $push: {
+          projects: req.body.project,
+        },
       },
-    },
 
-    { new: true }
-  );
-
-  res.json({ message: "Project has been saved successfully" });
+      { new: true }
+    );
+    res.json({ message: "Project has been saved successfully", data: profile });
+  }
 });
 
 // adding experience to experiences array
 router.post("/addExperince/:id", auth, async (req, res) => {
-  const profile = await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
+  const { error } = validateExperience(req.body.experience);
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  } else {
+    const profile = await Profile.findOneAndUpdate(
+      { employee_id: req.params.id },
 
-    {
-      $push: {
-        experiences: req.body.experience,
+      {
+        $push: {
+          experiences: req.body.experience,
+        },
       },
-    },
-    { new: true }
-  );
+      { new: true }
+    );
 
-  res.json({ message: "Experience has been saved successfully" });
+    res.json({
+      message: "Experience has been saved successfully",
+      data: profile,
+    });
+  }
 });
 
 // adding education to educations array
 router.post("/addEducation/:id", auth, async (req, res) => {
-  const profile = await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
+  const { error } = validateEducation(req.body.education);
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  } else {
+    const profile = await Profile.findOneAndUpdate(
+      { employee_id: req.params.id },
 
-    {
-      $push: {
-        educations: req.body.education,
+      {
+        $push: {
+          educations: req.body.education,
+        },
       },
-    },
 
-    { new: true }
-  );
+      { new: true }
+    );
 
-  res.json({ message: "Education has been saved successfully" });
+    res.json({
+      message: "Education has been saved successfully",
+      data: profile,
+    });
+  }
 });
 
 // adding language to languages array
 router.post("/addLanguage/:id", auth, async (req, res) => {
-  const profile = await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
+  const { error } = validateLanguage(req.body.language);
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  } else {
+    const profile = await Profile.findOneAndUpdate(
+      { employee_id: req.params.id },
 
-    {
-      $push: {
-        languages: req.body.language,
+      {
+        $push: {
+          languages: req.body.language,
+        },
       },
-    },
 
-    { new: true }
-  );
+      { new: true }
+    );
 
-  res.json({ message: "Language has been saved successfully" });
+    res.json({
+      message: "Language has been saved successfully",
+      data: profile,
+    });
+  }
 });
 
 // adding skill to skills array
@@ -117,8 +161,7 @@ router.post("/addLanguage/:id", auth, async (req, res) => {
 router.post("/addSkill/:id", auth, async (req, res) => {
   const { error } = validateSkill(req.body.skill);
   if (error) {
-    console.log(error.details);
-    return res.status(400).json({ message: error.details[0].message });
+    return res.status(400).send(error.details[0].message);
   } else {
     const profile = await Profile.findOneAndUpdate(
       { employee_id: req.params.id },
@@ -131,7 +174,7 @@ router.post("/addSkill/:id", auth, async (req, res) => {
       { new: true }
     );
 
-    res.json({ message: "Skill has been saved successfully" });
+    res.json({ message: "Skill has been saved successfully", data: profile });
   }
 });
 

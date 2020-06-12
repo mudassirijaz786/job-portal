@@ -91,8 +91,10 @@ const Profile = mongoose.model("Profile", profileSchema);
 
 validateProfile = (profile) => {
   const schema = {
-    // all validations here
+    employee_id: Joi.objectId(),
+    summary: Joi.string().required(),
   };
+
   return Joi.validate(profile, schema);
 };
 
@@ -101,9 +103,58 @@ validateSkill = (skill) => {
     name: Joi.string().required(),
     level: Joi.string().required(),
   };
+
   return Joi.validate(skill, schema);
 };
 
+validateLanguage = (language) => {
+  const schema = {
+    name: Joi.string().required(),
+    level: Joi.string().required(),
+  };
+
+  return Joi.validate(language, schema);
+};
+
+validateProject = (project) => {
+  const schema = {
+    name: Joi.string().required(),
+    url: Joi.string().required(),
+    description: Joi.string().required().max(80),
+  };
+
+  return Joi.validate(project, schema);
+};
+
+validateExperience = (experience) => {
+  const schema = {
+    jobTitle: Joi.string().required(),
+    company: Joi.string().required(),
+    industry: Joi.string().required(),
+    startDate: Joi.string().required(),
+    localtion: Joi.string().required(),
+    endDate: Joi.string().required(),
+    description: Joi.string().required().max(80),
+  };
+
+  return Joi.validate(experience, schema);
+};
+
+validateEducation = (experience) => {
+  const schema = {
+    instituteName: Joi.string().required(),
+    programme: Joi.string().required(),
+    major: Joi.string().required(),
+    completionYear: Joi.string().required(),
+  };
+
+  return Joi.validate(experience, schema);
+};
+
 exports.Profile = Profile;
-exports.validate = validateProfile;
+exports.validateProfile = validateProfile;
 exports.validateSkill = validateSkill;
+exports.validateLanguage = validateLanguage;
+exports.validateProject = validateProject;
+exports.validateExperience = validateExperience;
+exports.validateEducation = validateEducation;
