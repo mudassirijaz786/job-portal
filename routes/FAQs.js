@@ -5,6 +5,26 @@ const express = require("express");
 const router = express.Router();
 
 // getiing all faqs
+/**
+ * @swagger
+ * tags:
+ *   name: FAQ
+ *   description: FAQ management
+ */
+// getting current company
+/**
+ * @swagger
+ * /api/faq:
+ *  get:
+ *    description: Use to request all faqs
+ *    summary:  Use to request all faqs
+ *    tags: [FAQ]
+ *    responses:
+ *      '200':
+ *        description: A successful response containg all faqs in JSON
+ *      '400':
+ *        description: message in json format indicating  not found!
+ */
 router.get("/", async (req, res) => {
   const faqs = await FAQs.find();
   if (!faqs) {
@@ -15,6 +35,32 @@ router.get("/", async (req, res) => {
 });
 
 // getting a faq by id
+/**
+ * @swagger
+ * tags:
+ *   name: FAQ
+ *   description: FAQ management
+ */
+// getting a faq by id
+/**
+ * @swagger
+ * /api/faq/{id}:
+ *  get:
+ *    description+: Use to request the data about a faq
+ *    summary: Gets a faq by ID.
+ *    tags: [FAQ]
+ *    parameters:
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: Object ID of the faq to get it.
+ *    responses:
+ *      '200':
+ *        description: A successful response containg the info about that particular faq
+ *      '400':
+ *        description: message in json format indicating faq not found!
+ */
 router.get("/:id", async (req, res) => {
   const faq = await FAQs.findById(req.params.id);
   if (faq) {
@@ -25,7 +71,47 @@ router.get("/:id", async (req, res) => {
 });
 
 // posting a faq
-router.post("/", async (req, res) => {
+
+/**
+ * @swagger
+ * tags:
+ *   name: FAQ
+ *   description: ContactUs management
+ */
+/**
+ * @swagger
+ * /api/faq/:
+ *  post:
+ *    description: use to post a faq
+ *    summary: use to post a faq into system
+ *    tags: [FAQ]
+ *    parameters:
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg isAdmin field in JWT.
+ *    - in: body
+ *      name: faq
+ *      description: The faq to add.
+ *      schema:
+ *        type: object
+ *        required:
+ *        - question
+ *        - answer
+ *        properties:
+ *          question:
+ *            type: string
+ *          answer:
+ *            type: string
+ *    responses:
+ *      '200':
+ *        description: a successful message saying faq has been posted
+ *      '400':
+ *        description: message contains error indications
+ */
+
+router.post("/", auth, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -34,9 +120,46 @@ router.post("/", async (req, res) => {
   res.json({ message: "faqs has been saved successfully", data: faqs });
 });
 
-// FIXME: updation not working
-// updating a faq
-router.put("/:id", async (req, res) => {
+//updating a faq
+// FIXME: status is not updating to true
+/**
+ * @swagger
+ * /api/faq/{id}:
+ *  put:
+ *    description: Use to set the faq updated
+ *    summary:  Use to update the faq
+ *    tags: [FAQ]
+ *    parameters:
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token(JWT).
+ *    - in: path
+ *      name: id of the message
+ *      type: string
+ *      required: true
+ *      description:  Object ID of the messgae to set read
+ *    - in: body
+ *      name: faq
+ *      description: The faq to update.
+ *      schema:
+ *        type: object
+ *        required:
+ *        - question
+ *        - answer
+ *        properties:
+ *          question:
+ *            type: string
+ *          answer:
+ *            type: string
+ *    responses:
+ *      '200':
+ *        description: A successful response message in json indicating faq has been updated successfully
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
+ */
+router.put("/:id", auth, async (req, res) => {
   const faq = req.body.faq;
   const faqs = await FAQs.findByIdAndUpdate(
     req.params.id,
@@ -47,7 +170,32 @@ router.put("/:id", async (req, res) => {
 });
 
 // deleting a faq
-router.delete("/:id", async (req, res) => {
+// FIXME: problem in it, Cast to ObjectId failed for value "{id}" at path "_id" for model "FAQs"
+/**
+ * @swagger
+ * /api/faq/{id}:
+ *  delete:
+ *    description: Use to delete the faq
+ *    summary:  Use to delete the faq
+ *    tags: [FAQ]
+ *    parameters:
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token(JWT).
+ *    - in: path
+ *      name: id of the faq
+ *      type: string
+ *      required: true
+ *      description:  Object ID of the faq to delete
+ *    responses:
+ *      '200':
+ *        description: A successful response message in json indicating  faq Deleted successfully
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
+ */
+router.delete("/:id", auth, async (req, res) => {
   const faq = await FAQs.findByIdAndRemove(req.params.id);
   console.log(faq);
   if (!faq) {
