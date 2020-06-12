@@ -25,6 +25,7 @@ const companySchema = new mongoose.Schema({
   },
   email: {
     type: String,
+    unique: true,
   },
   phoneNumber: {
     type: String,
@@ -34,7 +35,6 @@ const companySchema = new mongoose.Schema({
   },
   noOfEmployees: {
     type: String,
-    unique: true,
   },
   verified: {
     type: Boolean,

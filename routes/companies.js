@@ -38,7 +38,7 @@ const Joi = require("joi");
  */
 router.get("/", auth, async (req, res) => {
   const companies = await Company.find().select("-password ");
-  res.json({ companies });
+  res.json({ data: companies });
 });
 /**
  * @swagger
@@ -68,7 +68,11 @@ router.get("/", auth, async (req, res) => {
  */
 router.get("/me/:id", auth, async (req, res) => {
   const company = await Company.findById(req.params.id).select("-password");
-  res.json({ currentCompany: company });
+  if (company) {
+    res.json({ data: company });
+  } else {
+    res.status(400).json({ message: "Not Found!" });
+  }
 });
 
 // login
@@ -141,7 +145,7 @@ router.post("/login", async (req, res) => {
  *        - description
  *        - phoneNumber
  *        - url
- *        - noOfcompanys
+ *        - noOfEmployees
  *        properties:
  *          name:
  *            type: string
@@ -151,6 +155,8 @@ router.post("/login", async (req, res) => {
  *            type: string
  *          ceo:
  *            type: string
+ *          city:
+ *            type: string
  *          address:
  *            type: string
  *          description:
@@ -159,7 +165,7 @@ router.post("/login", async (req, res) => {
  *            type: string
  *          url:
  *            type: string
- *          noOfcompanys:
+ *          noOfEmployees:
  *            type: string
  *    responses:
  *      '200':
@@ -188,7 +194,7 @@ router.post("/register", async (req, res) => {
       "email",
       "phoneNumber",
       "url",
-      "noOfcompanys",
+      "noOfEmployees",
     ])
   );
 
@@ -246,7 +252,10 @@ router.post("/resetPassword/newPassword", async (req, res) => {
       { new: true }
     );
     const token = company.generateAuthToken();
-    res.json({ token });
+    res.json({
+      message: "password has been updated successfully",
+      data: token,
+    });
   }
 });
 
