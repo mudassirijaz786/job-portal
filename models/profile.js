@@ -10,7 +10,6 @@ const profileSchema = new mongoose.Schema({
   },
   summary: {
     type: String,
-    required: true,
     default: "",
   },
   projects: [

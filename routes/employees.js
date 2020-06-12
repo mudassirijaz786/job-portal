@@ -117,12 +117,15 @@ router.post("/login", async (req, res) => {
  *        - email
  *        - password
  *        - name
+ *        - phoneNumber
  *        properties:
  *          name:
  *            type: string
  *          email:
  *            type: string
  *          password:
+ *            type: string
+ *          phoneNumber:
  *            type: string
  *    responses:
  *      '200':
@@ -162,7 +165,7 @@ router.post("/register", async (req, res) => {
 
   res
     .header("x-auth-token", token)
-    .send(_.pick(employee, ["_id", "name", "email"]));
+    .send(_.pick(employee, ["_id", "name", "email", "phoneNumber"]));
 });
 
 // new password after resetting
