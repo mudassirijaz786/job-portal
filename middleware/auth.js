@@ -7,7 +7,7 @@ module.exports = (req, res, next) => {
   const token = req.header("x-auth-token");
   if (!token)
     return res.status(401).json({
-      error: "Access denied, no token provided. Please provide auth token.",
+      message: "Access denied, no token provided. Please provide auth token.",
     });
 
   try {

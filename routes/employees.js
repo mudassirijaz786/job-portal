@@ -23,11 +23,19 @@ const sendEmailForResetPassword = require("../utils/emailService");
  *      type: string
  *      required: true
  *      description: Object ID of the employee to get.
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
  *    responses:
  *      '200':
  *        description: A successful response containg the info about that particular employee
  *      '400':
  *        description: message in json format indicating employee not found!
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
+ *
  */
 router.get("/me/:id", auth, async (req, res) => {
   const employee = await Employee.findById(req.params.id).select("-password ");
@@ -85,6 +93,35 @@ router.post("/login", async (req, res) => {
 });
 
 // register
+/**
+ * @swagger
+ * /api/employee/register:
+ *  post:
+ *    description: use to resister employee into the system
+ *    summary: use to resister employee into the system.
+ *    parameters:
+ *    - in: body
+ *      name: user
+ *      description: The employee to register.
+ *      schema:
+ *        type: object
+ *        required:
+ *        - email
+ *        - password
+ *        - name
+ *        properties:
+ *          name:
+ *            type: string
+ *          email:
+ *            type: string
+ *          password:
+ *            type: string
+ *    responses:
+ *      '200':
+ *        description: jwt token for that particular  new emoloyee.
+ *      '400':
+ *        description: message in json format indicating admin with email already exists.
+ */
 router.post("/register", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -117,6 +154,33 @@ router.post("/register", async (req, res) => {
 });
 
 // new password after resetting
+
+/**
+ * @swagger
+ * /api/employee  /resetPassword/newPassword:
+ *  post:
+ *    description: use to reset the password after clicked on the link
+ *    summary: use to reset the password after clicked on the link
+ *    parameters:
+ *    - in: body
+ *      name: user
+ *      description: user details.
+ *      schema:
+ *        type: object
+ *        required:
+ *        - _id
+ *        - newPassword
+ *        properties:
+ *          _id:
+ *            type: string
+ *          newPassword:
+ *            type: string
+ *    responses:
+ *      '200':
+ *        description: jwt token for that particular emoloyee.
+ *      '400':
+ *        description: message in json format indicating Invalid id.
+ */
 router.post("/resetPassword/newPassword", async (req, res) => {
   const employeeId = await Employee.findById(req.body._id);
   if (!employeeId) {
@@ -140,6 +204,29 @@ router.post("/resetPassword/newPassword", async (req, res) => {
 });
 
 // sending email on password reset
+/**
+ * @swagger
+ * /api/employee/resetPassword/sendEmail:
+ *  post:
+ *    description: use to sending email on password reset
+ *    summary: use to sending email on password reset
+ *    parameters:
+ *    - in: body
+ *      name: user
+ *      description: To send link for reset password on the email.
+ *      schema:
+ *        type: object
+ *        required:
+ *        - email
+ *        properties:
+ *         email:
+ *            type: string
+ *    responses:
+ *      '200':
+ *        description: message in json formet indicating An email with the link has been forwarded to you.
+ *      '400':
+ *        description: message in json format indicating Invalid email.
+ */
 router.post("/resetPassword/sendEmail", async (req, res) => {
   const email = req.body.email;
   const employee = await Employee.findOne({ email });
