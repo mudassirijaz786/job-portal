@@ -10,4 +10,5 @@ router.post("/", async (req, res) => {
     message: "You've applied the job to the organization successfully",
   });
 });
+
 module.exports = router;

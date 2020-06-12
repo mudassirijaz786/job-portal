@@ -1,26 +1,35 @@
 const express = require("express");
-const { ContactUs } = require("../models/contactUsMessages");
+const { ContactUs, validate } = require("../models/contactUsMessages");
 const auth = require("../middleware/auth");
 const _ = require("lodash");
 const router = express.Router();
 
+// getting all messages
 router.get("/", auth, async (req, res) => {
   const result = await ContactUs.find();
-  res.send(result);
+  res.json({ data: result });
 });
 
+// getting undreadMessages by id
 router.get("/unreadMessages/:id", auth, async (req, res) => {
   const messages = await ContactUs.find({ status: true });
   res.json({ length: messages.length });
 });
+
+// getting message by id
 router.get("/:id", auth, async (req, res) => {
   const result = await ContactUs.findById(req.params.id);
-  if (!result) res.status(400).send("Not Found");
+  if (!result) res.status(400).json({ error: "Not Found" });
   else {
-    res.send(result);
+    res.json({ data: result });
   }
 });
+
+// posting a new message
 router.post("/", auth, async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
   const details = _.pick(req.body, [
     "firstName",
     "lastName",
@@ -28,11 +37,14 @@ router.post("/", auth, async (req, res) => {
     "phoneNumber",
     "email",
   ]);
+
   const message = new ContactUs(details);
   const result = await message.save();
-  res.send(result);
+
+  res.json({ data: result });
 });
 
+// deleting message or contact us
 router.delete("/:id", auth, async (req, res) => {
   const result = await ContactUs.findByIdAndRemove(req.params.id);
   res.send(result);
@@ -49,7 +61,7 @@ router.put("/read/:id", auth, async (req, res) => {
     },
     { new: true }
   );
-  res.send(message);
+  res.json({ data: message });
 });
 
 module.exports = router;

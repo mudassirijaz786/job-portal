@@ -70,7 +70,7 @@ validateCompany = (company) => {
     description: Joi.string().min(50).max(100).required(),
     url: Joi.string().required(),
     noOfEmployees: Joi.number().required(),
-    password: Joi.string().alphanum.min(8).max(32).required(),
+    password: Joi.string().alphanum().min(8).max(32).required(),
     phoneNumber: Joi.string()
       .regex(RegExp(phoneReg))
       .required()
