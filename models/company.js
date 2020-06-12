@@ -60,8 +60,42 @@ companySchema.methods.generateAuthToken = () => {
 const Company = mongoose.model("Company", companySchema);
 
 validateCompany = (company) => {
+  const passwordReg = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+  const phoneReg = /^((\+\d{1,3}(-| )?\(?\d\)?(-| )?\d{1,5})|(\(?\d{2,6}\)?))(-| )?(\d{3,4})(-| )?(\d{4})(( x| ext)\d{1,5}){0,1}$/;
   const schema = {
-    // all validations goes here
+    name: Joi.string().min(5).max(50).required(),
+    ceo: Joi.string().min(5).max(50).required(),
+    address: Joi.string().min(5).max(50).required(),
+    email: Joi.string().min(5).max(255).required().email(),
+    city: Joi.string().min(5).max(50).required(),
+    description: Joi.string().min(50).max(100).required(),
+    url: Joi.string().required(),
+    noOfEmployees: Joi.number().required(),
+    password: Joi.string()
+      .regex(RegExp(passwordReg))
+      .required()
+      .options({
+        language: {
+          string: {
+            regex: {
+              base:
+                "must contains 8 digits, one lower case, one upper case and one special character",
+            },
+          },
+        },
+      }),
+    phoneNumber: Joi.string()
+      .regex(RegExp(phoneReg))
+      .required()
+      .options({
+        language: {
+          string: {
+            regex: {
+              base: "must be a valid phone number",
+            },
+          },
+        },
+      }),
   };
 
   return Joi.validate(company, schema);
