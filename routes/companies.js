@@ -37,7 +37,7 @@ const Joi = require("joi");
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.get("/", auth, async (req, res) => {
-  const companies = await Company.find().select("-password ");
+  const companies = await Company.find().select("-password");
   res.json({ data: companies });
 });
 /**
@@ -140,12 +140,7 @@ router.post("/login", async (req, res) => {
  *        - email
  *        - password
  *        - name
- *        - ceo
- *        - address
- *        - description
  *        - phoneNumber
- *        - url
- *        - noOfEmployees
  *        properties:
  *          name:
  *            type: string
@@ -153,19 +148,7 @@ router.post("/login", async (req, res) => {
  *            type: string
  *          password:
  *            type: string
- *          ceo:
- *            type: string
- *          city:
- *            type: string
- *          address:
- *            type: string
- *          description:
- *            type: string
  *          phoneNumber:
- *            type: string
- *          url:
- *            type: string
- *          noOfEmployees:
  *            type: string
  *    responses:
  *      '200':
@@ -184,18 +167,7 @@ router.post("/register", async (req, res) => {
     });
 
   company = new Company(
-    _.pick(req.body, [
-      "name",
-      "ceo",
-      "address",
-      "password",
-      "city",
-      "description",
-      "email",
-      "phoneNumber",
-      "url",
-      "noOfEmployees",
-    ])
+    _.pick(req.body, ["name", "password", "email", "phoneNumber"])
   );
 
   const salt = await bcrypt.genSalt(10);
@@ -298,6 +270,39 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
     );
   }
   res.json({ message: "An email with the link has been forwarded to you.." });
+});
+
+router.post("/companyBlocking/:id", auth, async (req, res) => {
+  const company = await Company.findById({ _id: req.params.id });
+  await Company.updateOne(
+    { _id: req.params.id },
+    { $set: { blocked: true } },
+    { new: true }
+  );
+
+  res.json({ message: `${company.name} is blocked` });
+});
+
+router.delete("/companyRemove/:id", auth, async (req, res) => {
+  const company = await Company.findByIdAndRemove(req.params.id);
+  if (!company) {
+    return res.status(400).json({ error: "company not found" });
+  } else {
+    res.json({ message: "company has been deleted successfully" });
+  }
+});
+
+// searching a company
+router.get("/searchCompany/:id", async (req, res) => {
+  const companies = await Company.find();
+  const query = req.params.id.toLowerCase();
+  var foundedCompanies = [];
+  companies.forEach((company) => {
+    if (company.name.toLowerCase().includes(query)) {
+      foundedCompanies.push(company);
+    }
+  });
+  res.json({ data: foundedCompanies });
 });
 
 // function to validate login params

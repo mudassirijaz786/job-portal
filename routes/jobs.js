@@ -81,7 +81,7 @@ router.get("/searchjob/:id", async (req, res) => {
       foundedJobs.push(job);
     }
   });
-  res.send(foundedJobs);
+  res.json({ data: foundedJobs });
 });
 
 // post a new job
@@ -183,7 +183,6 @@ router.put("/:id", auth, async (req, res) => {
 });
 
 // deletion of job
-// FIXME: problem in it, Cast to ObjectId failed for value "{id}" at path "_id" for model "Job"
 /**
  * @swagger
  * /api/job/{id}:
@@ -215,6 +214,15 @@ router.delete("/:id", auth, async (req, res) => {
     return res.status(400).json({ error: "Job not found" });
   } else {
     res.json({ message: "Job has been deleted successfully" });
+  }
+});
+
+router.get("/postedJobs/:id", auth, async (req, res) => {
+  const job = await Job.find({ company_id: req.params.id });
+  if (!job) {
+    return res.status(400).json({ error: "Job not found" });
+  } else {
+    res.json({ data: job });
   }
 });
 

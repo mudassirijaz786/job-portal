@@ -29,6 +29,11 @@ const employeeSchema = new mongoose.Schema({
     minlength: 5,
     maxlength: 1024,
   },
+  blocked: {
+    type: Boolean,
+    // required: true,
+    default: false,
+  },
 });
 
 // token generation

@@ -6,6 +6,7 @@ const admins = require("../routes/admins");
 const jobs = require("../routes/jobs");
 const contactUs = require("../routes/contactUs");
 const FAQs = require("../routes/FAQs");
+const companyProfiles = require("../routes/companyProfiles");
 const jobsApplied = require("../routes/jobsApplied");
 const termsAndConditions = require("../routes/termsAndConditions");
 
@@ -21,7 +22,7 @@ module.exports = (app) => {
   app.use("/api/contact", contactUs);
   app.use("/api/jobsApplied", jobsApplied);
   app.use("/api/termsAndCondition", termsAndConditions);
-
+  app.use("/api/companyProfile", companyProfiles);
   app.use("/api/faq", FAQs);
 
   app.use(error);

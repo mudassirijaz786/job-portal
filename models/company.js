@@ -8,19 +8,7 @@ const companySchema = new mongoose.Schema({
   name: {
     type: String,
   },
-  ceo: {
-    type: String,
-  },
-  address: {
-    type: String,
-  },
   password: {
-    type: String,
-  },
-  city: {
-    type: String,
-  },
-  description: {
     type: String,
   },
   email: {
@@ -30,15 +18,9 @@ const companySchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
   },
-  url: {
-    type: String,
-  },
-  noOfEmployees: {
-    type: String,
-  },
-  verified: {
+  blocked: {
     type: Boolean,
-    required: true,
+    // required: true,
     default: false,
   },
 });
@@ -63,13 +45,7 @@ validateCompany = (company) => {
   const phoneReg = /^((\+\d{1,3}(-| )?\(?\d\)?(-| )?\d{1,5})|(\(?\d{2,6}\)?))(-| )?(\d{3,4})(-| )?(\d{4})(( x| ext)\d{1,5}){0,1}$/;
   const schema = {
     name: Joi.string().min(5).max(50).required(),
-    ceo: Joi.string().min(5).max(50).required(),
-    address: Joi.string().min(5).max(50).required(),
     email: Joi.string().min(5).max(255).required().email(),
-    city: Joi.string().min(5).max(50).required(),
-    description: Joi.string().min(50).max(100).required(),
-    url: Joi.string().required(),
-    noOfEmployees: Joi.string().required(),
     password: Joi.string().alphanum().min(8).max(32).required(),
     phoneNumber: Joi.string()
       .regex(RegExp(phoneReg))
