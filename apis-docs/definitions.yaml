@@ -1,6 +1,7 @@
 definitions:
   faq:
     type: object
+    title: faq
     required:
       - question
       - answer

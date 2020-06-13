@@ -23,6 +23,15 @@ const companySchema = new mongoose.Schema({
     // required: true,
     default: false,
   },
+  emailVerified: {
+    type: Boolean,
+    // required: true,
+    default: false,
+  },
+  accountVerified: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // token generation

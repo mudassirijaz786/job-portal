@@ -1,10 +1,14 @@
 const auth = require("../middleware/auth");
+const admin = require("../middleware/admin");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("config");
 const _ = require("lodash");
 const express = require("express");
 const { Company, validate } = require("../models/company");
+
+const sendEmailVerificationCode = require("../utils/emailService");
+const sendNotification = require("../utils/emailService");
 const router = express.Router();
 const Joi = require("joi");
 
@@ -272,6 +276,136 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
   res.json({ message: "An email with the link has been forwarded to you.." });
 });
 
+// TODO: testing. put nae chal ra tha idr depresion error ara tha ma post lga dia ha .
+// FIXME: subject is not defined ReferenceError: subject is not defined in sendNotification waly main
+/**
+ * @swagger
+ * /api/company/sendEmailVerificationCode/:
+ *  post:
+ *    description: use to send Email Verification Code
+ *    summary: use to send Email Verification Code
+ *    tags: [Company]
+ *    parameters:
+ *    - in: body
+ *      name: company
+ *      description: To send Email Verification Code
+ *      schema:
+ *        type: object
+ *        required:
+ *        - email
+ *        properties:
+ *         email:
+ *            type: string
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      requiaccountVerifiedred: true
+ *      description: jwt token containg JWT.
+ *    responses:
+ *      '200':
+ *        description: message in json formet A code has been sent to your mail
+ *      '400':
+ *        description: message in json format indicating Invalid email
+ */
+router.post("/sendEmailVerificationCode", auth, async (req, res) => {
+  const { code } = req.body;
+  const { to } = req.body;
+  if (sendEmailVerificationCode(to, code)) {
+    res.json({ message: "A code has been sent to your mail ." });
+  } else {
+    res.status(401).json({ message: "Invalid email" });
+  }
+});
+
+/**
+ * @swagger
+ * /api/company/verifyEmail/{id}:
+ *  post:
+ *    description: use to verify company account
+ *    summary: use to verify a company account, admin can do it
+ *    tags: [Company]
+ *    parameters:
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: company_id which is use to delete an employee
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      requiaccountVerifiedred: true
+ *      description: jwt token containg JWT.
+ *    responses:
+ *      '200':
+ *        description: message in json formet containing company account is verified
+ *      '400':
+ *        description: message in json format indicating not found as an empty array
+ */
+
+router.post("/verifyEmail/:id", auth, async (req, res) => {
+  const company = await Company.findById({ _id: req.params.id });
+  await Company.updateOne(
+    { _id: req.params.id },
+    {
+      $set: {
+        emailVerified: true,
+      },
+    },
+    { new: true }
+  );
+  res.json({
+    message: `${company.name}'s Email has been verified successfully`,
+  });
+});
+
+// TODO: testing. put nae chal ra tha idr depresion error ara tha ma post lga dia ha ...
+// FIXME: subject is not defined ReferenceError: subject is not defined in sendNotification waly main
+/**
+ * @swagger
+ * /api/company/verifyAccount/{id}:
+ *  post:
+ *    description: use to verify company account
+ *    summary: use to verify a company account, admin can do it
+ *    tags: [Company]
+ *    parameters:
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: company_id which is use to verify a company account
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
+ *    responses:
+ *      '200':
+ *        description: message in json formet containing company account is verified
+ *      '400':
+ *        description: message in json format indicating not found as an empty array
+ */
+
+router.post("/verifyAccount/:id", admin, async (req, res) => {
+  const company = await Company.findById({ _id: req.params.id });
+  await Company.updateOne(
+    { _id: req.params.id },
+    {
+      $set: {
+        accountVerified: true,
+      },
+    },
+    { new: true }
+  );
+  sendNotification(
+    company.email,
+    "Your account has been successfully  verified",
+    "Your account has been successfully  verified"
+  );
+  res.json({
+    message: `${company.name}'s The acount has been successfully verified`,
+  });
+});
+
 /**
  * @swagger
  * /api/company/companyBlocking/{id}:
@@ -296,7 +430,6 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
  *      '400':
  *        description: message in json format indicating not found as an empty array
  */
-
 router.post("/companyBlocking/:id", auth, async (req, res) => {
   const company = await Company.findById({ _id: req.params.id });
   await Company.updateOne(
