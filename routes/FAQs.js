@@ -137,7 +137,7 @@ router.post("/", auth, async (req, res) => {
  *      name: id
  *      type: string
  *      required: true
- *      description:  Object ID of the messgae to set read
+ *      description:  Object ID of faq ti update
  *    - in: body
  *      name: faq
  *      required: true
@@ -151,15 +151,13 @@ router.post("/", auth, async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.put("/:id", auth, async (req, res) => {
-  const { faq } = req.body;
   const faqs = await FAQs.findByIdAndUpdate(
     req.params.id,
-    { $set: faq },
+    { $set: req.body },
     { new: true }
   );
   res.json({ message: "faqs has been updated and successfully", data: faqs });
 });
-
 // deleting a faq
 /**
  * @swagger

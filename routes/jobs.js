@@ -217,6 +217,32 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/job/postedJobs/{id}:
+ *  get:
+ *    description: Use to view the posted jobs the job
+ *    summary:   Use to view the posted jobs the job
+ *    tags: [Job]
+ *    parameters:
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token(JWT).
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description:  Object ID of company to view posted jobs
+ *    responses:
+ *      '200':
+ *        description: A successful response message in json indicating posted jobs
+ *      '400':
+ *        description: error message which shows that job not found
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
+ */
 router.get("/postedJobs/:id", auth, async (req, res) => {
   const job = await Job.find({ company_id: req.params.id });
   if (!job) {

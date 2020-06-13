@@ -274,7 +274,7 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
  *      name: id
  *      type: string
  *      required: true
- *      description: Object ID of the employee to get.
+ *      description: Object ID of the employee to delete
  *    - in: header
  *      name: x-auth-token
  *      type: string
