@@ -120,7 +120,6 @@ router.post("/", auth, async (req, res) => {
 });
 
 //updating a faq
-// FIXME: api-docs
 /**
  * @swagger
  *  /api/faq/{id}:
@@ -143,9 +142,8 @@ router.post("/", auth, async (req, res) => {
  *      name: faq
  *      required: true
  *      description: The faq to update.
- *      content:
- *        application/json:
- *          schema:
+ *      schema:
+ *        "$ref": "#/definitions/faq"
  *    responses:
  *      '200':
  *        description: A successful response message in json indicating faq has been updated successfully
@@ -153,7 +151,7 @@ router.post("/", auth, async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.put("/:id", auth, async (req, res) => {
-  const faq = req.body.faq;
+  const { faq } = req.body;
   const faqs = await FAQs.findByIdAndUpdate(
     req.params.id,
     { $set: faq },

@@ -1,6 +1,7 @@
 definitions:
   faq:
     type: object
+    name: faq
     required:
       - question
       - answer
@@ -8,4 +9,15 @@ definitions:
       question:
         type: string
       answer:
+        type: string
+  skill:
+    type: object
+    name: skill
+    required:
+      - level
+      - name
+    properties:
+      skill:
+        type: string
+      level:
         type: string
