@@ -261,6 +261,31 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
   res.json({ message: "An email with the link has been forwarded to you" });
 });
 
+// deleting an employee
+/**
+ * @swagger
+ * /api/employee/employeeRemove/{id}:
+ *  delete:
+ *    description: use to delete an employee
+ *    summary: use to delete an employee
+ *    tags: [Employee]
+ *    parameters:
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: Object ID of the employee to get.
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
+ *    responses:
+ *      '200':
+ *        description: message in json formet indicating the employee has been deleted.
+ *      '400':
+ *        description: message in json format indicating employee not found
+ */
 router.delete("/employeeRemove/:id", auth, async (req, res) => {
   const employee = await Employee.findByIdAndRemove(req.params.id);
   if (!employee) {
@@ -271,6 +296,30 @@ router.delete("/employeeRemove/:id", auth, async (req, res) => {
 });
 
 // searching an employee
+/**
+ * @swagger
+ * /api/employee/searchEmployee/{id}:
+ *  get:
+ *    description: use to search an employee
+ *    summary: use to search an employee by name
+ *    tags: [Employee]
+ *    parameters:
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: name which is use to search an employee
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
+ *    responses:
+ *      '200':
+ *        description: message in json formet containing employee matched with query
+ *      '400':
+ *        description: message in json format indicating not found as an empty array
+ */
 router.get("/searchEmployee/:id", async (req, res) => {
   const employees = await Employee.find();
   const query = req.params.id.toLowerCase();
@@ -283,7 +332,8 @@ router.get("/searchEmployee/:id", async (req, res) => {
   res.json({ data: foundedEmployee });
 });
 
-// FIXME: not working properly
+// updating an employee
+// TODO: api-docs
 router.put("/employeeUpdate/:id", auth, async (req, res) => {
   const { employee } = req.body;
   const { error } = validate(employee);
@@ -304,6 +354,31 @@ router.put("/employeeUpdate/:id", auth, async (req, res) => {
     res.status(400).json({ message: "Invalid id. employee not found" });
   }
 });
+
+/**
+ * @swagger
+ * /api/employee/employeeBlocking/{id}:
+ *  post:
+ *    description: use to block an employee
+ *    summary: use to block an employee, admin can do it
+ *    tags: [Employee]
+ *    parameters:
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: employee_id which is use to delete an employee
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
+ *    responses:
+ *      '200':
+ *        description: message in json formet containing employee matched with query
+ *      '400':
+ *        description: message in json format indicating not found as an empty array
+ */
 
 router.post("/employeeBlocking/:id", auth, async (req, res) => {
   const employee = await Employee.findById({ _id: req.params.id });
