@@ -158,7 +158,6 @@ router.put("/:id", auth, async (req, res) => {
   );
   res.json({ message: "faqs has been updated and successfully", data: faqs });
 });
-
 // deleting a faq
 /**
  * @swagger
