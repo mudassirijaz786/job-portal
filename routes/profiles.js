@@ -408,7 +408,7 @@ router.post("/addSkill/:id", auth, async (req, res) => {
   if (error) {
     return res.status(400).send(error.details[0].message);
   } else {
-    const profile = await Profile.findOneAndUpdate(
+    await Profile.findOneAndUpdate(
       { employee_id: req.params.id },
       {
         $push: {
@@ -418,7 +418,6 @@ router.post("/addSkill/:id", auth, async (req, res) => {
 
       { new: true }
     );
-    console.log(profile);
     res.json({ message: "Skill has been saved successfully" });
   }
 });
@@ -884,7 +883,6 @@ router.put("/updateSkill/:id", auth, async (req, res) => {
     },
     { new: true }
   );
-  console.log(profile);
   res.json({
     message: "Skill has been updated and saved successfully",
   });
@@ -935,7 +933,6 @@ router.put("/updateLanguage/:id", auth, async (req, res) => {
     },
     { new: true }
   );
-  console.log(profile);
   res.json({
     message: "Language has been updated and saved successfully",
   });

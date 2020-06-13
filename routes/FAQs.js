@@ -185,7 +185,6 @@ router.put("/:id", auth, async (req, res) => {
  */
 router.delete("/:id", auth, async (req, res) => {
   const faq = await FAQs.findByIdAndRemove(req.params.id);
-  console.log(faq);
   if (!faq) {
     res.status(404).json({ notFound: "No faq found" });
   } else {
