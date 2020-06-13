@@ -17,7 +17,180 @@ definitions:
       - level
       - name
     properties:
-      skill:
+      name:
+        type: string
+      level:
+        type: string
+  skillUpdate:
+    type: object
+    name: skillUpdate
+    required:
+      - _id
+      - level
+      - name
+    properties:
+      _id:
+        type: string
+      name:
+        type: string
+      level:
+        type: string
+  profile:
+    type: object
+    name: profile
+    required:
+      - employee_id
+      - summary
+    properties:
+      employee_id:
+        type: string
+      summary:
+        type: string
+  project:
+    type: object
+    name: project
+    required:
+      - name
+      - url
+      - description
+    properties:
+      name:
+        type: string
+      url:
+        type: string
+      description:
+        type: string
+  projectUpdate:
+    type: object
+    name: projectUpdate
+    required:
+      - _id
+      - name
+      - url
+      - description
+    properties:
+      _id:
+        type: string
+      name:
+        type: string
+      url:
+        type: string
+      description:
+        type: string
+  experience:
+    type: object
+    name: experience
+    required:
+      - jobTitle
+      - company
+      - industry
+      - localtion
+      - startDate
+      - endDate
+      - description
+    properties:
+      jobTitle:
+        type: string
+      company:
+        type: string
+      industry:
+        type: string
+      localtion:
+        type: string
+      startDate:
+        type: string
+      endDate:
+        type: string
+      description:
+        type: string
+  experienceUpdate:
+    type: object
+    name: experienceUpdate
+    required:
+      - _id
+      - jobTitle
+      - company
+      - industry
+      - localtion
+      - startDate
+      - endDate
+      - description
+    properties:
+      _id:
+        type: string
+      jobTitle:
+        type: string
+      company:
+        type: string
+      industry:
+        type: string
+      localtion:
+        type: string
+      startDate:
+        type: string
+      endDate:
+        type: string
+      description:
+        type: string
+  education:
+    type: object
+    name: education
+    required:
+      - instituteName
+      - programme
+      - major
+      - completionYear
+    properties:
+      instituteName:
+        type: string
+      programme:
+        type: string
+      major:
+        type: string
+      completionYear:
+        type: string
+  educationUpdate:
+    type: object
+    name: educationUpdate
+    required:
+      - _id
+      - instituteName
+      - programme
+      - major
+      - completionYear
+    properties:
+      _id:
+        type: string
+      instituteName:
+        type: string
+      programme:
+        type: string
+      major:
+        type: string
+      completionYear:
+        type: string
+  language:
+    type: object
+    name: language
+    required:
+      - name
+      - level
+    properties:
+      name:
+        type: string
+      level:
+        type: string
+  languageUpdate:
+    type: object
+    name: languageUpdate
+    required:
+      - _id
+      - name
+      - level
+    properties:
+      _id:
+        type: string
+      name:
         type: string
       level:
         type: string
