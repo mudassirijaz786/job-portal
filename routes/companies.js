@@ -1,10 +1,14 @@
 const auth = require("../middleware/auth");
+const admin = require("../middleware/admin");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("config");
 const _ = require("lodash");
 const express = require("express");
 const { Company, validate } = require("../models/company");
+
+const sendEmailVerificationCode = require("../utils/emailService");
+const sendNotification = require("../utils/emailService");
 const router = express.Router();
 const Joi = require("joi");
 
@@ -270,6 +274,46 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
     );
   }
   res.json({ message: "An email with the link has been forwarded to you.." });
+});
+
+router.post("/sendEmailVerificationCode", auth, async (req, res) => {
+  const { code } = req.body;
+  const { to } = req.body;
+  if (sendEmailVerificationCode(to, code)) {
+    res.json({ message: "A code has been sent to your mail ." });
+  } else {
+    res.status(401).json({ message: "Invalid email" });
+  }
+});
+router.put("/verifyEmail/:id", auth, async (req, res) => {
+  const company = await Company.findByIdAndUpdate(
+    req.params.id,
+    {
+      $set: {
+        emailVerified: true,
+      },
+    },
+    { new: true }
+  );
+  res.json({ message: "Email has been verified successfully" });
+});
+
+router.put("/verifyAccount/:id", admin, async (req, res) => {
+  const company = await Company.findByIdAndUpdate(
+    req.params.id,
+    {
+      $set: {
+        accountVerified: true,
+      },
+    },
+    { new: true }
+  );
+  sendNotification(
+    company.email,
+    "Your account has been successfully  verified",
+    "Your account has been successfully  verified"
+  );
+  res.json({ message: "The acount has been successfully verified" });
 });
 
 router.post("/companyBlocking/:id", auth, async (req, res) => {
