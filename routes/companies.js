@@ -272,6 +272,31 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
   res.json({ message: "An email with the link has been forwarded to you.." });
 });
 
+/**
+ * @swagger
+ * /api/company/companyBlocking/{id}:
+ *  post:
+ *    description: use to block an company
+ *    summary: use to block a company, admin can do it
+ *    tags: [Company]
+ *    parameters:
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: company_id which is use to delete an employee
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
+ *    responses:
+ *      '200':
+ *        description: message in json formet containing company is blocked
+ *      '400':
+ *        description: message in json format indicating not found as an empty array
+ */
+
 router.post("/companyBlocking/:id", auth, async (req, res) => {
   const company = await Company.findById({ _id: req.params.id });
   await Company.updateOne(
@@ -283,6 +308,31 @@ router.post("/companyBlocking/:id", auth, async (req, res) => {
   res.json({ message: `${company.name} is blocked` });
 });
 
+/**
+ * @swagger
+ * /api/company/companyRemove/{id}:
+ *  delete:
+ *    description: use to delete a company
+ *    summary: use to delete an company
+ *    tags: [Company]
+ *    parameters:
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: Object ID of the company to delete
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
+ *    responses:
+ *      '200':
+ *        description: message in json formet indicating the company has been deleted.
+ *      '400':
+ *        description: message in json format indicating company not found
+ */
+
 router.delete("/companyRemove/:id", auth, async (req, res) => {
   const company = await Company.findByIdAndRemove(req.params.id);
   if (!company) {
@@ -293,6 +343,31 @@ router.delete("/companyRemove/:id", auth, async (req, res) => {
 });
 
 // searching a company
+/**
+ * @swagger
+ * /api/company/searchCompany/{id}:
+ *  get:
+ *    description: use to search an company
+ *    summary: use to search an company by name
+ *    tags: [Company]
+ *    parameters:
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: name which is use to search a company
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
+ *    responses:
+ *      '200':
+ *        description: message in json formet containing company matched with query
+ *      '400':
+ *        description: message in json format indicating not found as an empty array
+ */
+
 router.get("/searchCompany/:id", async (req, res) => {
   const companies = await Company.find();
   const query = req.params.id.toLowerCase();

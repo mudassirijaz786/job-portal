@@ -119,7 +119,6 @@ router.post("/", auth, async (req, res) => {
   });
 });
 
-// FIXME: updation not working
 // updation in tac
 /**
  * @swagger
@@ -156,10 +155,9 @@ router.post("/", auth, async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.put("/:id", auth, async (req, res) => {
-  const { description } = req.body;
   const tac = await TAC.findByIdAndUpdate(
     req.params.id,
-    { $set: description },
+    { $set: req.body },
     { new: true }
   );
   res.json({
