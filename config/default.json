@@ -3,5 +3,7 @@
   "db": "mongodb://elys:elys123Pass@ds141450.mlab.com:41450/elys",
   "port": "3900",
   "requiresAuth": false,
-  "frontEndURL": ""
+  "frontEndURL": "",
+  "email": "tradebabapk@gmail.com",
+  "emailPassword": "Pakistan888"
 }

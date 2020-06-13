@@ -2,7 +2,10 @@ const auth = require("../middleware/auth");
 const _ = require("lodash");
 const { Job, validate } = require("../models/job");
 const { JobsApplied } = require("../models/jobs_applied");
+const { Employee } = require("../models/employee");
+const { Profile } = require("../models/profile");
 const express = require("express");
+const { log } = require("winston");
 const router = express.Router();
 
 // getting a job by id
@@ -56,16 +59,157 @@ router.get("/", async (req, res) => {
   res.json({ data: job });
 });
 
-// :FIXME: // job is not populating only array of object having job_id and employee_id is showing
+/**
+ * @swagger
+ * /api/job/applyForJob/:
+ *  put:
+ *    description: Use to request a apply for jobs
+ *    summary:  Use to request a apply for jobs
+ *    tags: [Job]
+ *    parameters:
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
+ *    - in: body
+ *      name: user
+ *      description: The user to login.
+ *      schema:
+ *        type: object
+ *        required:
+ *        - job_id
+ *        - applied_by
+ *        properties:
+ *          job_id:
+ *            type: string
+ *          applied_by:
+ *            type: string
+ *    responses:
+ *      '200':
+ *        description: A successful response containg apply for jobs in JSON
+ *      '400':
+ *        description: message in json format indicating  not found!
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
+ */
+router.put("/applyForJob", async (req, res) => {
+  const job = await Job.findByIdAndUpdate(
+    req.body.job_id,
+    {
+      $push: {
+        applied_by: { employee_id: req.body.applied_by },
+      },
+    },
+    { new: true }
+  );
+  res.json({
+    message: "You've applied the job to the organization successfully",
+  });
+});
+
 // appied jobs for a customer
+/**
+ * @swagger
+ * /api/job/appliedJobs/{id}:
+ *  get:
+ *    description: Use to request a applied jobs
+ *    summary:  Use to request a applied jobs
+ *    tags: [Job]
+ *    parameters:
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: Object ID of the employee to get applied jobs
+ *    responses:
+ *      '200':
+ *        description: A successful response containg applied jobs in JSON
+ *      '400':
+ *        description: message in json format indicating  not found!
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
+ */
 router.get("/appliedJobs/:id", async (req, res) => {
-  const jobs = await JobsApplied.find({ applied_by: req.params.id })
-    .populate("Job")
-    .exec();
-  res.send(jobs);
+  const job = await Job.find({
+    applied_by: { $elemMatch: { employee_id: req.params.id } },
+  }).select("-applied_by");
+  res.json({ data: job });
+});
+
+/**
+ * @swagger
+ * /api/job/collectCV/{id}:
+ *  get:
+ *    description: Use to request a collect cv
+ *    summary:  Use to request a collect cv
+ *    tags: [Job]
+ *    parameters:
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: Object ID of the job to collect cv
+ *    responses:
+ *      '200':
+ *        description: A successful response containg collect cv in JSON
+ *      '400':
+ *        description: message in json format indicating  not found!
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
+ */
+
+router.get("/collectCV/:jobId", auth, async (req, res) => {
+  const jobId = req.params.jobId;
+  const job = await Job.findById(jobId);
+  const profiles = [];
+  for (let i = 0; i < job.applied_by.length; i++) {
+    const element = job.applied_by[i];
+    const pr = await Profile.findOne({ employee_id: element.employee_id })
+      .populate("employee_id")
+      .exec();
+    pr.employee_id["password"] = "";
+    profiles.push(pr);
+  }
+  res.json({ data: profiles });
 });
 
 // searching a job
+/**
+ * @swagger
+ * /api/job/searchjob/{id}:
+ *  get:
+ *    description: use to search an job
+ *    summary: use to search an job by name
+ *    tags: [Job]
+ *    parameters:
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: name which is use to search a job
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
+ *    responses:
+ *      '200':
+ *        description: message in json formet containing job matched with query
+ *      '400':
+ *        description: message in json format indicating not found as an empty array
+ */
+
 router.get("/searchjob/:id", async (req, res) => {
   const jobs = await Job.find();
   const query = req.params.id.toLowerCase();
@@ -103,7 +247,7 @@ router.get("/searchjob/:id", async (req, res) => {
  *      name: x-auth-token
  *      type: string
  *      required: true
- *      description: jwt token containg isAdmin field in JWT.
+ *      description: jwt token containg JWT.
  *    - in: path
  *      name: id
  *      type: string
@@ -164,15 +308,70 @@ router.post("/postNewJob", auth, async (req, res) => {
   res.json({ message: "Job has been posted successfully", data: job });
 });
 
+/**
+ * @swagger
+ * /api/job/{id}:
+ *  put:
+ *    description: use to update a Job
+ *    summary: use to update a Job into system
+ *    tags: [Job]
+ *    parameters:
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token containg JWT.
+ *    - in: path
+ *      name: id
+ *      type: string
+ *      required: true
+ *      description: job_id to update it
+ *    - in: body
+ *      name: Job
+ *      description: The Job to add.
+ *      schema:
+ *        type: object
+ *        required:
+ *        - title
+ *        - company_id
+ *        - description
+ *        - noOfPositions
+ *        - city
+ *        - area
+ *        - yearsOfExperience
+ *        - salaryRange
+ *        properties:
+ *          company_id:
+ *            type: string
+ *          title:
+ *            type: string
+ *          description:
+ *            type: string
+ *          noOfPositions:
+ *            type: string
+ *          city:
+ *            type: string
+ *          area:
+ *            type: string
+ *          yearsOfExperience:
+ *            type: string
+ *          salaryRange:
+ *            type: string
+ *    responses:
+ *      '200':
+ *        description: a successful message saying faq has been posted
+ *      '400':
+ *        description: message contains error indications
+ */
+
 router.put("/:id", auth, async (req, res) => {
-  const { job } = req.body;
-  const { error } = validate(job);
+  const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   try {
     const jobs = await Job.findByIdAndUpdate(
       req.params.id,
-      { $set: job },
+      { $set: req.body },
       { new: true }
     );
 

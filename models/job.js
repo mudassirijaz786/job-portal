@@ -10,6 +10,9 @@ const jobSchema = new mongoose.Schema({
   yearsOfExperience: { type: String },
   salaryRange: { type: String },
   company_id: { type: mongoose.Schema.Types.ObjectId, ref: "Company" },
+  applied_by: [
+    { employee_id: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" } },
+  ],
 });
 
 const Job = mongoose.model("Job", jobSchema);

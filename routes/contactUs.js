@@ -181,7 +181,6 @@ router.post("/", async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.delete("/delete/:id", auth, async (req, res) => {
-  console.log(req.params.id);
   const result = await ContactUs.findByIdAndRemove(req.params.id);
   res.json({ message: "Message Deleted successfully" });
 });

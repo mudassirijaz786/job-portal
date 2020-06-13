@@ -4,14 +4,14 @@ const config = require("config");
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "tradebabapk@gmail.com",
-    pass: "Pakistan888",
+    user: config.get("email"),
+    pass: config.get("emailPassword"),
   },
 });
 
-module.exports = sendEmailForResetPassword = (to, subject, text, _id) => {
+module.exports = sendEmailForResetPassword = (to, text, _id) => {
   const mailOptions = {
-    from: "tradebabapk@gmail.com",
+    from: config.get("email"),
     to: to,
     subject: subject,
     text: text,
@@ -32,7 +32,7 @@ module.exports = sendEmailForResetPassword = (to, subject, text, _id) => {
 };
 module.exports = sendEmailVerificationCode = (to, code) => {
   const mailOptions = {
-    from: "tradebabapk@gmail.com",
+    from: config.get("email"),
     to: to,
     subject: "Please enter following code to verify your account",
     text: "enter " + code + " to verify your email",
@@ -48,9 +48,9 @@ module.exports = sendEmailVerificationCode = (to, code) => {
   });
 };
 
-module.exports = sendNotification = (to, subjectcontent) => {
+module.exports = sendNotification = (to, subject, content) => {
   const mailOptions = {
-    from: "tradebabapk@gmail.com",
+    from: config.get("email"),
     to: to,
     subject: subject,
     text: content,
