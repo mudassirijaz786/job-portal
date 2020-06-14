@@ -21,7 +21,6 @@ const adminSchema = new mongoose.Schema({
 
 // token generation
 adminSchema.methods.generateAuthToken = function () {
-  console.log(this.name);
   const token = jwt.sign(
     {
       _id: this._id,

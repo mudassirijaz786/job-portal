@@ -62,7 +62,7 @@ const profileSchema = new mongoose.Schema({
         type: String,
       },
       completionYear: {
-        type: Number,
+        type: String,
       },
     },
   ],
@@ -90,6 +90,7 @@ const Profile = mongoose.model("Profile", profileSchema);
 
 validateProfile = (profile) => {
   const schema = {
+    _id: Joi.objectId(),
     employee_id: Joi.objectId(),
     summary: Joi.string().required(),
   };
@@ -99,6 +100,7 @@ validateProfile = (profile) => {
 
 validateSkill = (skill) => {
   const schema = {
+    _id: Joi.objectId(),
     name: Joi.string().required(),
     level: Joi.string().required(),
   };
@@ -108,6 +110,7 @@ validateSkill = (skill) => {
 
 validateLanguage = (language) => {
   const schema = {
+    _id: Joi.objectId(),
     name: Joi.string().required(),
     level: Joi.string().required(),
   };
@@ -117,6 +120,7 @@ validateLanguage = (language) => {
 
 validateProject = (project) => {
   const schema = {
+    _id: Joi.objectId(),
     name: Joi.string().required(),
     url: Joi.string().required(),
     description: Joi.string().required().max(80),
@@ -127,6 +131,7 @@ validateProject = (project) => {
 
 validateExperience = (experience) => {
   const schema = {
+    _id: Joi.objectId(),
     jobTitle: Joi.string().required(),
     company: Joi.string().required(),
     industry: Joi.string().required(),
@@ -141,6 +146,7 @@ validateExperience = (experience) => {
 
 validateEducation = (experience) => {
   const schema = {
+    _id: Joi.objectId(),
     instituteName: Joi.string().required(),
     programme: Joi.string().required(),
     major: Joi.string().required(),

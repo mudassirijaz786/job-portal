@@ -1,4 +1,5 @@
 const auth = require("../middleware/auth");
+const admin = require("../middleware/admin");
 const _ = require("lodash");
 const { TAC, validate } = require("../models/termsAndConditions");
 const express = require("express");
@@ -19,30 +20,27 @@ const router = express.Router();
  *    summary:  Use to request all terms and conditions
  *    tags: [Terms and Conditions]
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg all terms and conditions in JSON
- *      '400':
+ *      '404':
  *        description: message in json format indicating  not found!
  */
 router.get("/", async (req, res) => {
-  const tac = await TAC.find();
-  if (!tac) {
-    res.status(400).json({ notFound: "Not found" });
-  } else {
-    res.json({ data: tac });
+  try {
+    const tac = await TAC.find();
+    if (!tac) {
+      res.status(404).json({ notFound: "Not found" });
+    } else {
+      res.json({ data: tac });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
 // getting tac by id
-
-// getting a faq by id
-/**
- * @swagger
- * tags:
- *   name: Terms and Conditions
- *   description: terms and conditions management
- */
-// getting a faq by id
 /**
  * @swagger
  * /api/termsAndCondition/{id}:
@@ -57,27 +55,27 @@ router.get("/", async (req, res) => {
  *      required: true
  *      description: Object ID of the terms and conditions  to get it.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg the info about that particular  terms and conditions
  *      '400':
  *        description: message in json format indicating terms and conditions not found!
  */
 router.get("/:id", async (req, res) => {
-  const tac = await TAC.findById(req.params.id);
-  if (!tac) {
-    res.status(400).json({ notFound: "not found in system" });
-  } else {
-    res.json({ data: tac });
+  try {
+    const tac = await TAC.findById(req.params.id);
+    if (!tac) {
+      res.status(400).json({ notFound: "not found in system" });
+    } else {
+      res.json({ data: tac });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
 // posting a tac
-/**
- * @swagger
- * tags:
- *   name: Terms and Conditions
- *   description: ContactUs management
- */
 /**
  * @swagger
  * /api/termsAndCondition/:
@@ -102,21 +100,27 @@ router.get("/:id", async (req, res) => {
  *          description:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: a successful message saying Terms and Conditions has been posted
  *      '400':
  *        description: message contains error indications
  */
-router.post("/", auth, async (req, res) => {
-  const { error } = validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+router.post("/", admin, async (req, res) => {
+  try {
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
 
-  const tac = new TAC(_.pick(req.body, ["description"]));
-  await tac.save();
-  res.json({
-    message: "termsAndCondition has been saved successfully",
-    data: tac,
-  });
+    const tac = new TAC(_.pick(req.body, ["description"]));
+    await tac.save();
+    res.json({
+      message: "termsAndCondition has been saved successfully",
+      data: tac,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // updation in tac
@@ -149,21 +153,27 @@ router.post("/", auth, async (req, res) => {
  *          description:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response message in json indicating  terms And Condition  has been updated successfully
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.put("/:id", auth, async (req, res) => {
-  const tac = await TAC.findByIdAndUpdate(
-    req.params.id,
-    { $set: req.body },
-    { new: true }
-  );
-  res.json({
-    message: "termsAndCondition has been updated and successfully",
-    data: tac,
-  });
+router.put("/:id", admin, async (req, res) => {
+  try {
+    const tac = await TAC.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true }
+    );
+    res.json({
+      message: "termsAndCondition has been updated and successfully",
+      data: tac,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // deleting a tac
@@ -186,17 +196,23 @@ router.put("/:id", auth, async (req, res) => {
  *      required: true
  *      description:  Object ID of the faq to delete
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response message in json indicating Terms and Conditions Deleted successfully
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.delete("/:id", auth, async (req, res) => {
-  const tac = await TAC.findByIdAndRemove(req.params.id);
-  if (!tac) {
-    res.status(400).json({ notFound: "termsAndCondition not found" });
-  } else {
-    res.json({ message: "termsAndCondition has been deleted successfully" });
+router.delete("/:id", admin, async (req, res) => {
+  try {
+    const tac = await TAC.findByIdAndRemove(req.params.id);
+    if (!tac) {
+      res.status(400).json({ notFound: "termsAndCondition not found" });
+    } else {
+      res.json({ message: "termsAndCondition has been deleted successfully" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 module.exports = router;

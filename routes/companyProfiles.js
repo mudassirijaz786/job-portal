@@ -2,6 +2,7 @@ const auth = require("../middleware/auth");
 const _ = require("lodash");
 const express = require("express");
 const { CompanyProfile, validate } = require("../models/companyProfile");
+const { Company } = require("../models/company");
 
 const router = express.Router();
 
@@ -24,26 +25,32 @@ const router = express.Router();
  *      name: x-auth-token
  *      type: string
  *      required: true
- *      description: jwt token containg isAdmin field in JWT.
+ *      description: jwt token
  *    - in: path
  *      name: id
  *      type: string
  *      required: true
  *      description: Object ID of the admin to get.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg profile in JSON
- *      '400':
- *        description: message in json format indicating  not found!
+ *      '404':
+ *        description: message in json format indicating not found!
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.get("/me/:id", auth, async (req, res) => {
-  const profile = await CompanyProfile.findOne({ company_id: req.params.id });
-  if (profile) {
-    res.json({ data: profile });
-  } else {
-    res.status(400).json({ message: "Not Found!" });
+  try {
+    const profile = await CompanyProfile.findOne({ company_id: req.params.id });
+    if (profile) {
+      res.json({ data: profile });
+    } else {
+      res.status(404).json({ message: "Not Found!" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -90,36 +97,54 @@ router.get("/me/:id", auth, async (req, res) => {
  *          company_id:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: success mesage in json formet indicating profile has been forwarded...
+ *      '404':
+ *        description: message in json format indicating company not found
  *      '400':
- *        description: message in json format indicating profile not saved
+ *        description: message in json format indicating company profile cannot be saved into database
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 
 router.post("/", auth, async (req, res) => {
-  const { error } = validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-
   try {
-    const profile = new CompanyProfile(
-      _.pick(req.body, [
-        "company_id",
-        "ceo",
-        "address",
-        "city",
-        "description",
-        "url",
-        "noOfEmployees",
-      ])
-    );
-
-    await profile.save();
-    res.json({
-      message: "Company Profile has been saved successfully",
-      data: profile,
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+    const found = await Company.findOne({
+      _id: req.body.company_id,
     });
+    if (!found) {
+      res.status(404).json({
+        message: `Company not found with an id ${req.body.company_id}`,
+      });
+    } else {
+      try {
+        const profile = new CompanyProfile(
+          _.pick(req.body, [
+            "company_id",
+            "ceo",
+            "address",
+            "city",
+            "description",
+            "url",
+            "noOfEmployees",
+          ])
+        );
+
+        await profile.save();
+        res.json({
+          message: "Company Profile has been saved successfully",
+          data: profile,
+        });
+      } catch (error) {
+        res.status(400).json({ message: "profile cannot be saved" });
+      }
+    }
   } catch (error) {
-    res.status(400).json({ error: "profile cannot be saved" });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -143,17 +168,33 @@ router.post("/", auth, async (req, res) => {
  *      required: true
  *      description: Object ID of the employee to get.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: success mesage in json formet indicating profile has been deleted
+ *      '404':
+ *        description: message in json format indicating company not found
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.delete("/deleteProfile/:id", auth, async (req, res) => {
-  const profile = await CompanyProfile.findByIdAndRemove(req.params.id);
-  res.json({ message: "company profile has been deleted successfully" });
+  try {
+    const profile = await CompanyProfile.findByIdAndRemove(req.params.id);
+    if (!profile) {
+      res
+        .status(404)
+        .json({ message: `Company not found with an id ${req.params.id}` });
+    }
+    res.json({ message: "company profile has been deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
+//update company profile
 /**
  * @swagger
- * /api/companyProfile/{id}:
+ * /api/companyProfile/update/{id}:
  *  put:
  *    description: use to create a profile for company
  *    summary: use to create a profile for company
@@ -163,7 +204,7 @@ router.delete("/deleteProfile/:id", auth, async (req, res) => {
  *      name: id
  *      type: string
  *      required: true
- *      description: Object ID of the company to get.
+ *      description: Object ID of the company to update
  *    - in: header
  *      name: x-auth-token
  *      type: string
@@ -171,7 +212,7 @@ router.delete("/deleteProfile/:id", auth, async (req, res) => {
  *      description: jwt token containg JWT.
  *    - in: body
  *      name: company profile
- *      description: The profile of companu to create.
+ *      description: The profile of company to update
  *      schema:
  *        type: object
  *        required:
@@ -195,30 +236,47 @@ router.delete("/deleteProfile/:id", auth, async (req, res) => {
  *          noOfEmployees:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: success mesage in json formet indicating profile has been forwarded...
- *      '400':
+ *      '404':
  *        description: message in json format indicating profile not saved
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 
-router.put("/:id", auth, async (req, res) => {
-  const { error } = validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-  const profile = await CompanyProfile.findOneAndUpdate(
-    { company_id: req.params.id },
-    {
-      $set: {
-        ceo: req.body.ceo,
-        address: req.body.address,
-        city: req.body.city,
-        description: req.body.description,
-        url: req.body.url,
-        noOfEmployees: req.body.noOfEmployees,
-      },
-    },
-    { new: true }
-  );
-  res.json({ message: "Profile has been saved successfully" });
+router.put("/update/:id", auth, async (req, res) => {
+  try {
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+    const found = await CompanyProfile.findOne({
+      company_id: req.params.id,
+    });
+    if (!found) {
+      res
+        .status(404)
+        .json({ message: `Company not found with an id ${req.params.id}` });
+    } else {
+      await CompanyProfile.findOneAndUpdate(
+        { company_id: req.params.id },
+        {
+          $set: {
+            ceo: req.body.ceo,
+            address: req.body.address,
+            city: req.body.city,
+            description: req.body.description,
+            url: req.body.url,
+            noOfEmployees: req.body.noOfEmployees,
+          },
+        },
+        { new: true }
+      );
+      res.json({ message: "Company profile has been saved successfully" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 module.exports = router;

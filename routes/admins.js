@@ -33,17 +33,23 @@ const Joi = require("joi");
  *    responses:
  *      '200':
  *        description: A successful response containg all admins in JSON
- *      '400':
+ *      '500':
+ *        description: internal server error
+ *      '404':
  *        description: message in json format indicating  not found!
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.get("/", auth, admin, async (req, res) => {
-  const admin = await Admin.find().select("-password ");
-  if (admin) {
-    res.json({ data: admin });
-  } else {
-    res.status(400).json({ message: "Not Found!" });
+router.get("/", admin, async (req, res) => {
+  try {
+    const admin = await Admin.find().select("-password");
+    if (admin) {
+      res.json({ data: admin });
+    } else {
+      res.status(404).json({ message: "Not Found!" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -67,19 +73,25 @@ router.get("/", auth, admin, async (req, res) => {
  *      required: true
  *      description: Object ID of the admin to get.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg all admins in JSON
- *      '400':
+ *      '404':
  *        description: message in json format indicating  not found!
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.get("/me/:id", auth, async (req, res) => {
-  const admin = await Admin.findById(req.params.id).select("-password ");
-  if (admin) {
-    res.json({ data: admin });
-  } else {
-    res.status(400).json({ message: "Not Found!" });
+router.get("/me/:id", admin, async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.params.id).select("-password");
+    if (admin) {
+      res.json({ data: admin });
+    } else {
+      res.status(404).json({ message: "Not Found!" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -89,12 +101,12 @@ router.get("/me/:id", auth, async (req, res) => {
  * /api/admin/login:
  *  post:
  *    description: use to login admin into the system
- *    summary: login employee into the system using email and password.
+ *    summary: login admin into the system using email and password.
  *    tags: [Admins]
  *    parameters:
  *    - in: body
- *      name: user
- *      description: The user to login.
+ *      name: admin
+ *      description: The admin to login.
  *      schema:
  *        type: object
  *        required:
@@ -106,25 +118,32 @@ router.get("/me/:id", auth, async (req, res) => {
  *          password:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
- *        description: jwt token for that particular user loged in.
+ *        description: jwt token for that particular admin loged in.
  *      '400':
  *        description: message in json format Invalid email or password.
  */
 router.post("/login", async (req, res) => {
-  const { error } = validateLogin(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-
-  let admin = await Admin.findOne({ email: req.body.email });
-  if (!admin)
-    return res.status(400).json({ error: "Invalid email or password." });
-
-  const validPassword = await bcrypt.compare(req.body.password, admin.password);
-  if (!validPassword)
-    return res.status(400).json({ error: "Invalid email or password." });
-
-  const token = admin.generateAuthToken();
-  res.json({ token });
+  try {
+    const { error } = validateLogin(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+    let admin = await Admin.findOne({ email: req.body.email });
+    if (!admin)
+      return res.status(400).json({ error: "Invalid email or password." });
+    const validPassword = await bcrypt.compare(
+      req.body.password,
+      admin.password
+    );
+    if (!validPassword)
+      return res.status(400).json({ error: "Invalid email or password." });
+    const token = admin.generateAuthToken();
+    res.header("x-auth-token", token);
+    res.send({ token });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // register
@@ -153,31 +172,31 @@ router.post("/login", async (req, res) => {
  *          password:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
- *        description: jwt token for that particular  new admin.
+ *        description: jwt token for that particular new admin.
  *      '400':
  *        description: message in json format indicating admin with email already exists.
  */
 router.post("/register", async (req, res) => {
-  const { error } = validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-
-  let admin = await Admin.findOne({ email: req.body.email });
-  if (admin)
-    return res.status(400).json({
-      message: `Admin with email ${req.body.email} is already registered`,
-    });
-
-  admin = new Admin(_.pick(req.body, ["name", "password", "email"]));
-
-  const salt = await bcrypt.genSalt(10);
-  admin.password = await bcrypt.hash(admin.password, salt);
-  await admin.save();
-  // console.log(admin);
-  const token = admin.generateAuthToken();
-  // console.log(token);
-
-  res.header("x-auth-token", token).json({ token });
+  try {
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+    let admin = await Admin.findOne({ email: req.body.email });
+    if (admin)
+      return res.status(409).json({
+        message: `Admin with email ${req.body.email} is already registered`,
+      });
+    admin = new Admin(_.pick(req.body, ["name", "password", "email"]));
+    const salt = await bcrypt.genSalt(10);
+    admin.password = await bcrypt.hash(admin.password, salt);
+    await admin.save();
+    const token = admin.generateAuthToken();
+    res.header("x-auth-token", token).json({ token });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // function to validate login params

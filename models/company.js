@@ -16,9 +16,6 @@ const companySchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    // index: true,
-    // unique: true,
-    // sparse: true,
   },
   phoneNumber: {
     type: String,

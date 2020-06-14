@@ -46,7 +46,7 @@ validateCompanyProfile = (companyProfile) => {
     city: Joi.string().min(5).max(10).required(),
     description: Joi.string().min(10).max(100).required(),
     url: Joi.string().required(),
-    noOfEmployees: Joi.string().required(),
+    noOfEmployees: Joi.string(),
   };
 
   return Joi.validate(companyProfile, schema);
