@@ -34,17 +34,23 @@ const Joi = require("joi");
  *      required: true
  *      description: jwt token (JWT).
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg all companys in JSON
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.get("/deleteALL", auth, async (req, res) => {
-  const company = await Company.find();
-  company.forEach(async (c) => {
-    await Company.findByIdAndRemove(c._id);
-  });
-  res.json({ message: "All companies deleted" });
+  try {
+    const company = await Company.find();
+    company.forEach(async (c) => {
+      await Company.findByIdAndRemove(c._id);
+    });
+    res.json({ message: "All companies deleted" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // getting current company
@@ -62,6 +68,8 @@ router.get("/deleteALL", auth, async (req, res) => {
  *      required: true
  *      description: jwt token (JWT).
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg all companys in JSON
  *      '404':
@@ -70,8 +78,12 @@ router.get("/deleteALL", auth, async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.get("/", auth, async (req, res) => {
-  const companies = await Company.find().select("-password");
-  res.json({ data: companies });
+  try {
+    const companies = await Company.find().select("-password");
+    res.json({ data: companies });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 /**
  * @swagger
@@ -92,6 +104,8 @@ router.get("/", auth, async (req, res) => {
  *      required: true
  *      description: Object ID of the company to get.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg a companys in JSON
  *      '404':
@@ -100,11 +114,15 @@ router.get("/", auth, async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.get("/me/:id", auth, async (req, res) => {
-  const company = await Company.findById(req.params.id).select("-password");
-  if (company) {
-    res.json({ data: company });
-  } else {
-    res.status(404).json({ message: "Not Found!" });
+  try {
+    const company = await Company.findById(req.params.id).select("-password");
+    if (company) {
+      res.json({ data: company });
+    } else {
+      res.status(404).json({ message: "Not Found!" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -131,26 +149,32 @@ router.get("/me/:id", auth, async (req, res) => {
  *          password:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: jwt token for that particular user loged in.
  *      '400':
  *        description: message in json format Invalid email or password.
  */
 router.post("/login", async (req, res) => {
-  const { error } = validateLogin(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-  let company = await Company.findOne({ email: req.body.email });
-  if (!company)
-    return res.status(400).json({ message: "Invalid email or password." });
-  const validPassword = await bcrypt.compare(
-    req.body.password,
-    company.password
-  );
-  if (!validPassword)
-    return res.status(400).json({ message: "Invalid email or password." });
-  const token = company.generateAuthToken();
-  res.header("x-auth-token", token);
-  res.json({ token });
+  try {
+    const { error } = validateLogin(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+    let company = await Company.findOne({ email: req.body.email });
+    if (!company)
+      return res.status(400).json({ message: "Invalid email or password." });
+    const validPassword = await bcrypt.compare(
+      req.body.password,
+      company.password
+    );
+    if (!validPassword)
+      return res.status(400).json({ message: "Invalid email or password." });
+    const token = company.generateAuthToken();
+    res.header("x-auth-token", token);
+    res.json({ token });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // register
@@ -182,6 +206,8 @@ router.post("/login", async (req, res) => {
  *          phoneNumber:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: jwt token for that particular new company.
  *      '400':
@@ -189,22 +215,26 @@ router.post("/login", async (req, res) => {
  */
 
 router.post("/register", async (req, res) => {
-  const { error } = validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-  let company = await Company.findOne({ email: req.body.email });
-  if (company)
-    return res.status(400).json({
-      message: `Company with email ${req.body.email} is already registered`,
-    });
-  company = new Company(
-    _.pick(req.body, ["name", "password", "email", "phoneNumber"])
-  );
-  const salt = await bcrypt.genSalt(10);
-  company.password = await bcrypt.hash(company.password, salt);
-  await company.save();
-  const token = company.generateAuthToken();
-  res.header("x-auth-token", token);
-  res.json({ token });
+  try {
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+    let company = await Company.findOne({ email: req.body.email });
+    if (company)
+      return res.status(400).json({
+        message: `Company with email ${req.body.email} is already registered`,
+      });
+    company = new Company(
+      _.pick(req.body, ["name", "password", "email", "phoneNumber"])
+    );
+    const salt = await bcrypt.genSalt(10);
+    company.password = await bcrypt.hash(company.password, salt);
+    await company.save();
+    const token = company.generateAuthToken();
+    res.header("x-auth-token", token);
+    res.json({ token });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // new password after resetting
@@ -230,32 +260,38 @@ router.post("/register", async (req, res) => {
  *          newPassword:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: jwt token for that particular emoloyee.
  *      '404':
  *        description: message in json format indicating Id not found
  */
 router.post("/resetPassword/newPassword", async (req, res) => {
-  const companyId = await Company.findById(req.body._id);
-  if (!companyId) {
-    res.status(404).json({ message: "Company Id Not Found" });
-  } else {
-    const salt = await bcrypt.genSalt(10);
-    const password = await bcrypt.hash(req.body.newPassword, salt);
-    const company = await Company.findByIdAndUpdate(
-      req.body._id,
-      {
-        $set: {
-          password,
+  try {
+    const companyId = await Company.findById(req.body._id);
+    if (!companyId) {
+      res.status(404).json({ message: "Company Id Not Found" });
+    } else {
+      const salt = await bcrypt.genSalt(10);
+      const password = await bcrypt.hash(req.body.newPassword, salt);
+      const company = await Company.findByIdAndUpdate(
+        req.body._id,
+        {
+          $set: {
+            password,
+          },
         },
-      },
-      { new: true }
-    );
-    const token = company.generateAuthToken();
-    res.json({
-      message: "password has been updated successfully",
-      token,
-    });
+        { new: true }
+      );
+      const token = company.generateAuthToken();
+      res.json({
+        message: "password has been updated successfully",
+        token,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -279,6 +315,8 @@ router.post("/resetPassword/newPassword", async (req, res) => {
  *         email:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: message in json formet indicating An email with the link has been forwarded to you.
  *      '404':
@@ -286,19 +324,23 @@ router.post("/resetPassword/newPassword", async (req, res) => {
  */
 
 router.post("/resetPassword/sendEmail", async (req, res) => {
-  const email = req.body.email;
-  const company = await Company.findOne({ email });
-  if (!company) {
-    res.status(404).json({ message: "Not Found!" });
-  } else {
-    sendEmailForResetPassword(
-      email,
-      "Reset Your password",
-      "Follow the link to generate code ",
-      company._id
-    );
+  try {
+    const email = req.body.email;
+    const company = await Company.findOne({ email });
+    if (!company) {
+      res.status(404).json({ message: "Not Found!" });
+    } else {
+      sendEmailForResetPassword(
+        email,
+        "Reset Your password",
+        "Follow the link to generate code ",
+        company._id
+      );
+    }
+    res.json({ message: "An email with the link has been forwarded to you.." });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
-  res.json({ message: "An email with the link has been forwarded to you.." });
 });
 
 /**
@@ -328,20 +370,26 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
  *      required: true
  *      description: jwt token containg JWT.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: message in json formet A code has been sent to your mail
- *      '400':
+ *      '401':
  *        description: message in json format indicating Invalid email
  */
 
 router.post("/sendEmailVerificationCode", auth, async (req, res) => {
-  const { code } = req.body;
-  const { email } = req.body;
   try {
-    sendEmailVerificationCode(email, code);
-    res.json({ message: "A code has been sent to your mail ." });
+    const { code } = req.body;
+    const { email } = req.body;
+    try {
+      sendEmailVerificationCode(email, code);
+      res.json({ message: "A code has been sent to your mail ." });
+    } catch (error) {
+      res.status(401).json({ message: "Invalid email" });
+    }
   } catch (error) {
-    res.status(401).json({ message: "Invalid email" });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -364,6 +412,8 @@ router.post("/sendEmailVerificationCode", auth, async (req, res) => {
  *      required: true
  *      description: jwt token containg JWT.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: message in json formet containing company account is verified
  *      '404':
@@ -373,22 +423,26 @@ router.post("/sendEmailVerificationCode", auth, async (req, res) => {
  */
 
 router.post("/verifyEmail/:id", auth, async (req, res) => {
-  const company = await Company.findById({ _id: req.params.id });
-  if (!company) {
-    res.status(404).json({ message: "Company not found" });
-  }
-  await Company.updateOne(
-    { _id: req.params.id },
-    {
-      $set: {
-        emailVerified: true,
+  try {
+    const company = await Company.findById({ _id: req.params.id });
+    if (!company) {
+      res.status(404).json({ message: "Company not found" });
+    }
+    await Company.updateOne(
+      { _id: req.params.id },
+      {
+        $set: {
+          emailVerified: true,
+        },
       },
-    },
-    { new: true }
-  );
-  res.json({
-    message: `${company.name}'s Email has been verified successfully`,
-  });
+      { new: true }
+    );
+    res.json({
+      message: `${company.name}'s Email has been verified successfully`,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 /**
@@ -410,6 +464,8 @@ router.post("/verifyEmail/:id", auth, async (req, res) => {
  *      required: true
  *      description: jwt token containg JWT.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: message in json formet containing company account is verified
  *      '404':
@@ -419,27 +475,31 @@ router.post("/verifyEmail/:id", auth, async (req, res) => {
  */
 
 router.post("/verifyAccount/:id", admin, async (req, res) => {
-  const company = await Company.findById({ _id: req.params.id });
-  if (!company) {
-    res.status(404).json({ message: "Company not found" });
-  }
-  await Company.updateOne(
-    { _id: req.params.id },
-    {
-      $set: {
-        accountVerified: true,
+  try {
+    const company = await Company.findById({ _id: req.params.id });
+    if (!company) {
+      res.status(404).json({ message: "Company not found" });
+    }
+    await Company.updateOne(
+      { _id: req.params.id },
+      {
+        $set: {
+          accountVerified: true,
+        },
       },
-    },
-    { new: true }
-  );
-  sendNotification(
-    company.email,
-    "Your account has been successfully  verified",
-    `Hi ${company.name}, your account has been successfully  verified`
-  );
-  res.json({
-    message: `${company.name}'s The acount has been successfully verified`,
-  });
+      { new: true }
+    );
+    sendNotification(
+      company.email,
+      "Your account has been successfully  verified",
+      `Hi ${company.name}, your account has been successfully  verified`
+    );
+    res.json({
+      message: `${company.name}'s The acount has been successfully verified`,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 /**
@@ -461,6 +521,8 @@ router.post("/verifyAccount/:id", admin, async (req, res) => {
  *      required: true
  *      description: jwt token containg JWT.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: message in json formet containing company is blocked
  *      '404':
@@ -469,17 +531,20 @@ router.post("/verifyAccount/:id", admin, async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.post("/companyBlocking/:id", auth, async (req, res) => {
-  const company = await Company.findById({ _id: req.params.id });
-  if (!company) {
-    res.status(404).json({ message: "Company not found" });
+  try {
+    const company = await Company.findById({ _id: req.params.id });
+    if (!company) {
+      res.status(404).json({ message: "Company not found" });
+    }
+    await Company.updateOne(
+      { _id: req.params.id },
+      { $set: { blocked: true } },
+      { new: true }
+    );
+    res.json({ message: `${company.name} is blocked` });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
-  await Company.updateOne(
-    { _id: req.params.id },
-    { $set: { blocked: true } },
-    { new: true }
-  );
-
-  res.json({ message: `${company.name} is blocked` });
 });
 
 /**
@@ -501,6 +566,8 @@ router.post("/companyBlocking/:id", auth, async (req, res) => {
  *      required: true
  *      description: jwt token containg JWT.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: message in json formet indicating the company has been deleted.
  *      '400':
@@ -508,11 +575,15 @@ router.post("/companyBlocking/:id", auth, async (req, res) => {
  */
 
 router.delete("/companyRemove/:id", auth, async (req, res) => {
-  const company = await Company.findByIdAndRemove(req.params.id);
-  if (!company) {
-    return res.status(404).json({ message: "company not found" });
-  } else {
-    res.json({ message: "Company has been deleted successfully" });
+  try {
+    const company = await Company.findByIdAndRemove(req.params.id);
+    if (!company) {
+      return res.status(404).json({ message: "company not found" });
+    } else {
+      res.json({ message: "Company has been deleted successfully" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -531,6 +602,8 @@ router.delete("/companyRemove/:id", auth, async (req, res) => {
  *      required: true
  *      description: name which is use to search a company
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: message in json formet containing company matched with query
  *      '404':
@@ -538,20 +611,24 @@ router.delete("/companyRemove/:id", auth, async (req, res) => {
  */
 
 router.get("/searchCompany/:id", async (req, res) => {
-  const companies = await Company.find();
-  const query = req.params.id.toLowerCase();
-  var foundedCompanies = [];
-  companies.forEach((company) => {
-    if (company.name.toLowerCase().includes(query)) {
-      foundedCompanies.push(company);
+  try {
+    const companies = await Company.find();
+    const query = req.params.id.toLowerCase();
+    var foundedCompanies = [];
+    companies.forEach((company) => {
+      if (company.name.toLowerCase().includes(query)) {
+        foundedCompanies.push(company);
+      }
+    });
+    if (foundedCompanies.length === 0) {
+      res
+        .status(404)
+        .json({ message: `No company found with named as ${query}` });
+    } else {
+      res.json({ data: foundedCompanies });
     }
-  });
-  if (foundedCompanies.length === 0) {
-    res
-      .status(404)
-      .json({ message: `No company found with named as ${query}` });
-  } else {
-    res.json({ data: foundedCompanies });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

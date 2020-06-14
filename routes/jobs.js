@@ -29,17 +29,23 @@ const router = express.Router();
  *      required: true
  *      description: Object ID of the Job to get it.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg the info about that particular Job
  *      '404':
  *        description: message in json format indicating Job not found!
  */
 router.get("/:id", async (req, res) => {
-  const job = await Job.findById(req.params.id);
-  if (!job) {
-    res.status(404).json({ message: "no job found matching with given ID" });
-  } else {
-    res.json({ data: job });
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) {
+      res.status(404).json({ message: "no job found matching with given ID" });
+    } else {
+      res.json({ data: job });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -52,14 +58,20 @@ router.get("/:id", async (req, res) => {
  *    summary:  Use to request all Jobs
  *    tags: [Job]
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg all Job in JSON
  *      '400':
  *        description: message in json format indicating  not found!
  */
 router.get("/", async (req, res) => {
-  const job = await Job.find();
-  res.json({ data: job });
+  try {
+    const job = await Job.find();
+    res.json({ data: job });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 /**
@@ -89,6 +101,8 @@ router.get("/", async (req, res) => {
  *          applied_by:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg apply for jobs in JSON
  *      '404':
@@ -97,22 +111,26 @@ router.get("/", async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.put("/applyForJob", async (req, res) => {
-  const found = Job.findById(req.body.job_id);
-  if (!found) {
-    res.status(404).json({ message: "Job Not Found!" });
-  } else {
-    await Job.findByIdAndUpdate(
-      req.body.job_id,
-      {
-        $push: {
-          applied_by: { employee_id: req.body.applied_by },
+  try {
+    const found = Job.findById(req.body.job_id);
+    if (!found) {
+      res.status(404).json({ message: "Job Not Found!" });
+    } else {
+      await Job.findByIdAndUpdate(
+        req.body.job_id,
+        {
+          $push: {
+            applied_by: { employee_id: req.body.applied_by },
+          },
         },
-      },
-      { new: true }
-    );
-    res.json({
-      message: "You've applied the job to the organization successfully",
-    });
+        { new: true }
+      );
+      res.json({
+        message: "You've applied the job to the organization successfully",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -136,6 +154,8 @@ router.put("/applyForJob", async (req, res) => {
  *      required: true
  *      description: Object ID of the employee to get applied jobs
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg applied jobs in JSON
  *      '400':
@@ -144,10 +164,14 @@ router.put("/applyForJob", async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.get("/appliedJobs/:id", async (req, res) => {
-  const job = await Job.find({
-    applied_by: { $elemMatch: { employee_id: req.params.id } },
-  }).select("-applied_by");
-  res.json({ data: job });
+  try {
+    const job = await Job.find({
+      applied_by: { $elemMatch: { employee_id: req.params.id } },
+    }).select("-applied_by");
+    res.json({ data: job });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 /**
@@ -169,6 +193,8 @@ router.get("/appliedJobs/:id", async (req, res) => {
  *      required: true
  *      description: Object ID of the job to collect cv
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg collect cv in JSON
  *      '404':
@@ -178,21 +204,27 @@ router.get("/appliedJobs/:id", async (req, res) => {
  */
 
 router.get("/collectCV/:jobId", auth, async (req, res) => {
-  const jobId = req.params.jobId;
-  const job = await Job.findById(jobId);
-  if (!job) {
-    res.status(404).json({ message: "There is no cv submitted for this job" });
-  } else {
-    const profiles = [];
-    for (let i = 0; i < job.applied_by.length; i++) {
-      const element = job.applied_by[i];
-      const pr = await Profile.findOne({ employee_id: element.employee_id })
-        .populate("employee_id")
-        .exec();
-      pr.employee_id["password"] = "";
-      profiles.push(pr);
+  try {
+    const jobId = req.params.jobId;
+    const job = await Job.findById(jobId);
+    if (!job) {
+      res
+        .status(404)
+        .json({ message: "There is no cv submitted for this job" });
+    } else {
+      const profiles = [];
+      for (let i = 0; i < job.applied_by.length; i++) {
+        const element = job.applied_by[i];
+        const pr = await Profile.findOne({ employee_id: element.employee_id })
+          .populate("employee_id")
+          .exec();
+        pr.employee_id["password"] = "";
+        profiles.push(pr);
+      }
+      res.json({ data: profiles });
     }
-    res.json({ data: profiles });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -216,6 +248,8 @@ router.get("/collectCV/:jobId", auth, async (req, res) => {
  *      required: true
  *      description: jwt token containg JWT.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: message in json formet containing job matched with query
  *      '404':
@@ -223,34 +257,32 @@ router.get("/collectCV/:jobId", auth, async (req, res) => {
  */
 
 router.get("/searchjob/:id", async (req, res) => {
-  const jobs = await Job.find();
-  const query = req.params.id.toLowerCase();
-  var foundedJobs = [];
-  jobs.forEach((job) => {
-    if (job.title.toLowerCase().includes(query)) {
-      foundedJobs.push(job);
-    } else if (job.city.toLowerCase().includes(query)) {
-      foundedJobs.push(job);
-    } else if (job.area.toLowerCase().includes(query)) {
-      foundedJobs.push(job);
-    } else if (job.description.toLowerCase().includes(query)) {
-      foundedJobs.push(job);
+  try {
+    const jobs = await Job.find();
+    const query = req.params.id.toLowerCase();
+    var foundedJobs = [];
+    jobs.forEach((job) => {
+      if (job.title.toLowerCase().includes(query)) {
+        foundedJobs.push(job);
+      } else if (job.city.toLowerCase().includes(query)) {
+        foundedJobs.push(job);
+      } else if (job.area.toLowerCase().includes(query)) {
+        foundedJobs.push(job);
+      } else if (job.description.toLowerCase().includes(query)) {
+        foundedJobs.push(job);
+      }
+    });
+    if (foundedJobs.length === 0) {
+      res.status(404).json({ message: `No job found with named as ${query}` });
+    } else {
+      res.json({ data: foundedJobs });
     }
-  });
-  if (foundedJobs.length === 0) {
-    res.status(404).json({ message: `No job found with named as ${query}` });
-  } else {
-    res.json({ data: foundedJobs });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
 // post a new job
-/**
- * @swagger
- * tags:
- *   name: Job
- *   description: ContactUs management
- */
 /**
  * @swagger
  * /api/job/postNewJob:
@@ -301,28 +333,34 @@ router.get("/searchjob/:id", async (req, res) => {
  *          salaryRange:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: a successful message saying faq has been posted
  *      '400':
  *        description: message contains error indications
  */
 router.post("/postNewJob", auth, async (req, res) => {
-  const { error } = validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-  const job = new Job(
-    _.pick(req.body, [
-      "title",
-      "description",
-      "noOfPositions",
-      "city",
-      "area",
-      "yearsOfExperience",
-      "salaryRange",
-      "company_id",
-    ])
-  );
-  await job.save();
-  res.json({ message: "Job has been posted successfully", data: job });
+  try {
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+    const job = new Job(
+      _.pick(req.body, [
+        "title",
+        "description",
+        "noOfPositions",
+        "city",
+        "area",
+        "yearsOfExperience",
+        "salaryRange",
+        "company_id",
+      ])
+    );
+    await job.save();
+    res.json({ message: "Job has been posted successfully", data: job });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 /**
@@ -375,6 +413,8 @@ router.post("/postNewJob", auth, async (req, res) => {
  *          salaryRange:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: a successful message saying job has been updated
  *      '400':
@@ -384,18 +424,22 @@ router.post("/postNewJob", auth, async (req, res) => {
  */
 
 router.put("/:id", auth, async (req, res) => {
-  const { error } = validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-  const found = Job.findById(req.params.id);
-  if (!found) {
-    res.status(404).json({ message: "Invalid id. Job not found" });
-  } else {
-    const jobs = await Job.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { new: true }
-    );
-    res.json({ message: "Job has been updateed successfully", data: jobs });
+  try {
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+    const found = Job.findById(req.params.id);
+    if (!found) {
+      res.status(404).json({ message: "Invalid id. Job not found" });
+    } else {
+      const jobs = await Job.findByIdAndUpdate(
+        req.params.id,
+        { $set: req.body },
+        { new: true }
+      );
+      res.json({ message: "Job has been updateed successfully", data: jobs });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -419,6 +463,8 @@ router.put("/:id", auth, async (req, res) => {
  *      required: true
  *      description:  Object ID of the faq to delete
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response message in json indicating job Deleted successfully
  *      '401':
@@ -426,11 +472,15 @@ router.put("/:id", auth, async (req, res) => {
  */
 
 router.delete("/:id", auth, async (req, res) => {
-  const job = await Job.findByIdAndRemove(req.params.id);
-  if (!job) {
-    return res.status(400).json({ error: "Job not found" });
-  } else {
-    res.json({ message: "Job has been deleted successfully" });
+  try {
+    const job = await Job.findByIdAndRemove(req.params.id);
+    if (!job) {
+      return res.status(400).json({ error: "Job not found" });
+    } else {
+      res.json({ message: "Job has been deleted successfully" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -453,6 +503,8 @@ router.delete("/:id", auth, async (req, res) => {
  *      required: true
  *      description:  Object ID of company to view posted jobs
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response message in json indicating posted jobs
  *      '400':
@@ -461,11 +513,15 @@ router.delete("/:id", auth, async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.get("/postedJobs/:id", auth, async (req, res) => {
-  const job = await Job.find({ company_id: req.params.id });
-  if (!job) {
-    return res.status(400).json({ error: "Job not found" });
-  } else {
-    res.json({ data: job });
+  try {
+    const job = await Job.find({ company_id: req.params.id });
+    if (!job) {
+      return res.status(400).json({ error: "Job not found" });
+    } else {
+      res.json({ data: job });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
