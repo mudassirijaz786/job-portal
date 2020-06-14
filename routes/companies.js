@@ -39,7 +39,7 @@ const Joi = require("joi");
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.get("/deleteALL", [auth, admin], async (req, res) => {
+router.get("/deleteALL", admin, async (req, res) => {
   try {
     const company = await Company.find();
     company.forEach(async (c) => {
@@ -420,7 +420,7 @@ router.post("/sendEmailVerificationCode", auth, async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 
-router.post("/verifyEmail/:id", auth, async (req, res) => {
+router.post("/verifyEmail/:id", admin, async (req, res) => {
   try {
     const company = await Company.findById({ _id: req.params.id });
     if (!company) {
@@ -528,7 +528,7 @@ router.post("/verifyAccount/:id", admin, async (req, res) => {
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.post("/companyBlocking/:id", [auth, admin], async (req, res) => {
+router.post("/companyBlocking/:id", admin, async (req, res) => {
   try {
     const company = await Company.findById({ _id: req.params.id });
     if (!company) {
@@ -572,7 +572,7 @@ router.post("/companyBlocking/:id", [auth, admin], async (req, res) => {
  *        description: message in json format indicating company not found
  */
 
-router.delete("/companyRemove/:id", [auth, admin], async (req, res) => {
+router.delete("/companyRemove/:id", admin, async (req, res) => {
   try {
     const company = await Company.findByIdAndRemove(req.params.id);
     if (!company) {
@@ -608,7 +608,7 @@ router.delete("/companyRemove/:id", [auth, admin], async (req, res) => {
  *        description: message in json formet containing no company found named as query specified
  */
 
-router.get("/searchCompany/:id", [auth, admin], async (req, res) => {
+router.get("/searchCompany/:id", admin, async (req, res) => {
   try {
     const companies = await Company.find();
     const query = req.params.id.toLowerCase();
