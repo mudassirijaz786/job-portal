@@ -6,9 +6,7 @@ const config = require("config");
 const _ = require("lodash");
 const express = require("express");
 const { Company, validate } = require("../models/company");
-
 const sendEmailVerificationCode = require("../utils/emailService");
-
 const sendNotification = require("../utils/emailService");
 const router = express.Router();
 const Joi = require("joi");
@@ -41,7 +39,7 @@ const Joi = require("joi");
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.get("/deleteALL", auth, async (req, res) => {
+router.get("/deleteALL", [auth, admin], async (req, res) => {
   try {
     const company = await Company.find();
     company.forEach(async (c) => {
@@ -530,7 +528,7 @@ router.post("/verifyAccount/:id", admin, async (req, res) => {
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.post("/companyBlocking/:id", auth, async (req, res) => {
+router.post("/companyBlocking/:id", [auth, admin], async (req, res) => {
   try {
     const company = await Company.findById({ _id: req.params.id });
     if (!company) {
@@ -574,7 +572,7 @@ router.post("/companyBlocking/:id", auth, async (req, res) => {
  *        description: message in json format indicating company not found
  */
 
-router.delete("/companyRemove/:id", auth, async (req, res) => {
+router.delete("/companyRemove/:id", [auth, admin], async (req, res) => {
   try {
     const company = await Company.findByIdAndRemove(req.params.id);
     if (!company) {
@@ -610,7 +608,7 @@ router.delete("/companyRemove/:id", auth, async (req, res) => {
  *        description: message in json formet containing no company found named as query specified
  */
 
-router.get("/searchCompany/:id", async (req, res) => {
+router.get("/searchCompany/:id", [auth, admin], async (req, res) => {
   try {
     const companies = await Company.find();
     const query = req.params.id.toLowerCase();

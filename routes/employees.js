@@ -1,5 +1,6 @@
 const auth = require("../middleware/auth");
 const bcrypt = require("bcryptjs");
+const admin = require("../middleware/admin");
 const jwt = require("jsonwebtoken");
 const config = require("config");
 const _ = require("lodash");
@@ -315,7 +316,7 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
  *      '404':
  *        description: message in json format indicating employee not found
  */
-router.delete("/employeeRemove/:id", auth, async (req, res) => {
+router.delete("/employeeRemove/:id", [auth, admin], async (req, res) => {
   try {
     const employee = await Employee.findByIdAndRemove(req.params.id);
     if (!employee) {
@@ -355,7 +356,7 @@ router.delete("/employeeRemove/:id", auth, async (req, res) => {
  *      '400':
  *        description: message in json format indicating not found as an empty array
  */
-router.get("/searchEmployee/:id", async (req, res) => {
+router.get("/searchEmployee/:id", [auth, admin], async (req, res) => {
   try {
     const employees = await Employee.find();
     const query = req.params.id.toLowerCase();
@@ -418,7 +419,7 @@ router.get("/searchEmployee/:id", async (req, res) => {
  *        description: message contains not found ID
  */
 
-router.put("/employeeUpdate/:id", auth, async (req, res) => {
+router.put("/employeeUpdate/:id", [auth, admin], async (req, res) => {
   try {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -468,7 +469,7 @@ router.put("/employeeUpdate/:id", auth, async (req, res) => {
  *        description: message in json format indicating not found
  */
 
-router.post("/employeeBlocking/:id", auth, async (req, res) => {
+router.post("/employeeBlocking/:id", [auth, admin], async (req, res) => {
   try {
     const employee = await Employee.findById({ _id: req.params.id });
     if (!employee) {
