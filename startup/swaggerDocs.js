@@ -1,8 +1,5 @@
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
-// const swaggerUi = require("swagger-ui-express");
-const YAML = require("yamljs");
-const swaggerDocument = YAML.load("../apis/swagger.yaml");
 
 module.exports = (app) => {
   // Extended: https://swagger.io/specification/#infoObject
