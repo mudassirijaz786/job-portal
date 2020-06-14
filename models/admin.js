@@ -7,17 +7,21 @@ const mongoose = require("mongoose");
 const adminSchema = new mongoose.Schema({
   name: {
     type: String,
+    required: true,
   },
   password: {
     type: String,
+    required: true,
   },
   email: {
     type: String,
+    required: true,
   },
 });
 
 // token generation
-adminSchema.methods.generateAuthToken = () => {
+adminSchema.methods.generateAuthToken = function () {
+  console.log(this.name);
   const token = jwt.sign(
     {
       _id: this._id,

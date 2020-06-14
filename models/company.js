@@ -7,25 +7,31 @@ const mongoose = require("mongoose");
 const companySchema = new mongoose.Schema({
   name: {
     type: String,
+    required: true,
   },
   password: {
     type: String,
+    required: true,
   },
   email: {
     type: String,
-    unique: true,
+    required: true,
+    // index: true,
+    // unique: true,
+    // sparse: true,
   },
   phoneNumber: {
     type: String,
+    required: true,
   },
   blocked: {
     type: Boolean,
-    // required: true,
+    required: true,
     default: false,
   },
   emailVerified: {
     type: Boolean,
-    // required: true,
+    required: true,
     default: false,
   },
   accountVerified: {
@@ -35,7 +41,7 @@ const companySchema = new mongoose.Schema({
 });
 
 // token generation
-companySchema.methods.generateAuthToken = () => {
+companySchema.methods.generateAuthToken = function () {
   const token = jwt.sign(
     {
       _id: this._id,

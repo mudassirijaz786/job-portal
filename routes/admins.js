@@ -173,7 +173,9 @@ router.post("/register", async (req, res) => {
   const salt = await bcrypt.genSalt(10);
   admin.password = await bcrypt.hash(admin.password, salt);
   await admin.save();
+  // console.log(admin);
   const token = admin.generateAuthToken();
+  // console.log(token);
 
   res.header("x-auth-token", token).json({ token });
 });

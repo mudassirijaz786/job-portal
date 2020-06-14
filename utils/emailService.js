@@ -13,7 +13,7 @@ module.exports = sendEmailForResetPassword = (to, text, _id) => {
   const mailOptions = {
     from: config.get("email"),
     to: to,
-    subject: subject,
+    subject: "Account recovery.",
     text: text,
     html: `<a href='${config.get(
       "frontEndURL"

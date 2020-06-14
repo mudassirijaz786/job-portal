@@ -11,7 +11,16 @@ const sendEmailVerificationCode = require("../utils/emailService");
 const sendNotification = require("../utils/emailService");
 const router = express.Router();
 const Joi = require("joi");
+// :TODO: delete krna hai isy
 
+router.get("/deleteALL", async (req, res) => {
+  const company = await Company.find();
+  res.send(company);
+  company.forEach(async (c) => {
+    await Company.findByIdAndRemove(c._id);
+  });
+  res.send("all deleted");
+});
 /**
  * @swagger
  * tags:
@@ -293,8 +302,11 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
  *        type: object
  *        required:
  *        - email
+ *        - code
  *        properties:
  *         email:
+ *            type: string
+ *         code:
  *            type: string
  *    - in: header
  *      name: x-auth-token
@@ -309,10 +321,11 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
  */
 router.post("/sendEmailVerificationCode", auth, async (req, res) => {
   const { code } = req.body;
-  const { to } = req.body;
-  if (sendEmailVerificationCode(to, code)) {
+  const { email } = req.body;
+  try {
+    sendEmailVerificationCode(email, code);
     res.json({ message: "A code has been sent to your mail ." });
-  } else {
+  } catch (error) {
     res.status(401).json({ message: "Invalid email" });
   }
 });
