@@ -19,27 +19,26 @@ const router = express.Router();
  *    summary:  Use to request all faqs
  *    tags: [FAQ]
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg all faqs in JSON
  *      '404':
  *        description: message in json format indicating  not found!
  */
 router.get("/", async (req, res) => {
-  const faqs = await FAQs.find();
-  if (!faqs) {
-    res.status(404).json({ notFound: "no faq in database" });
-  } else {
-    res.json({ data: faqs });
+  try {
+    const faqs = await FAQs.find();
+    if (!faqs) {
+      res.status(404).json({ notFound: "no faq in database" });
+    } else {
+      res.json({ data: faqs });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// getting a faq by id
-/**
- * @swagger
- * tags:
- *   name: FAQ
- *   description: FAQ management
- */
 // getting a faq by id
 /**
  * @swagger
@@ -55,28 +54,27 @@ router.get("/", async (req, res) => {
  *      required: true
  *      description: Object ID of the faq to get it.
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response containg the info about that particular faq
  *      '404':
  *        description: message in json format indicating faq not found!
  */
 router.get("/:id", async (req, res) => {
-  const faq = await FAQs.findById(req.params.id);
-  if (faq) {
-    res.json({ data: faq });
-  } else {
-    res.status(404).json({ notFound: "faq not found" });
+  try {
+    const faq = await FAQs.findById(req.params.id);
+    if (faq) {
+      res.json({ data: faq });
+    } else {
+      res.status(404).json({ notFound: "faq not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
 // posting a faq
-
-/**
- * @swagger
- * tags:
- *   name: FAQ
- *   description: ContactUs management
- */
 /**
  * @swagger
  * /api/faq/:
@@ -104,6 +102,8 @@ router.get("/:id", async (req, res) => {
  *          answer:
  *            type: string
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: a successful message saying faq has been posted
  *      '400':
@@ -111,11 +111,15 @@ router.get("/:id", async (req, res) => {
  */
 
 router.post("/", auth, async (req, res) => {
-  const { error } = validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-  const faqs = new FAQs(_.pick(req.body, ["question", "answer"]));
-  await faqs.save();
-  res.json({ message: "faqs has been saved successfully", data: faqs });
+  try {
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+    const faqs = new FAQs(_.pick(req.body, ["question", "answer"]));
+    await faqs.save();
+    res.json({ message: "faqs has been saved successfully", data: faqs });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 //updating a faq
@@ -144,6 +148,8 @@ router.post("/", auth, async (req, res) => {
  *      schema:
  *        "$ref": "#/definitions/faq"
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response message in json indicating faq has been updated successfully
  *      '404':
@@ -152,18 +158,25 @@ router.post("/", auth, async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.put("/:id", auth, async (req, res) => {
-  let found = await FAQs.findById({ _id: req.params.id });
-  if (!found) {
-    return res.status(404).json({
-      error: "No faq in the system",
-    });
-  } else {
-    const faqs = await FAQs.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { new: true }
-    );
-    res.json({ message: "faqs has been updated and successfully", data: faqs });
+  try {
+    let found = await FAQs.findById({ _id: req.params.id });
+    if (!found) {
+      return res.status(404).json({
+        error: "No faq in the system",
+      });
+    } else {
+      const faqs = await FAQs.findByIdAndUpdate(
+        req.params.id,
+        { $set: req.body },
+        { new: true }
+      );
+      res.json({
+        message: "faqs has been updated and successfully",
+        data: faqs,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 // deleting a faq
@@ -186,6 +199,8 @@ router.put("/:id", auth, async (req, res) => {
  *      required: true
  *      description:  Object ID of the faq to delete
  *    responses:
+ *      '500':
+ *        description: internal server error
  *      '200':
  *        description: A successful response message in json indicating  faq Deleted successfully
  *      '404':
@@ -194,11 +209,15 @@ router.put("/:id", auth, async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.delete("/:id", auth, async (req, res) => {
-  const faq = await FAQs.findByIdAndRemove(req.params.id);
-  if (!faq) {
-    res.status(404).json({ notFound: "No faq found" });
-  } else {
-    res.json({ message: "faqs has been deleted successfully" });
+  try {
+    const faq = await FAQs.findByIdAndRemove(req.params.id);
+    if (!faq) {
+      res.status(404).json({ notFound: "No faq found" });
+    } else {
+      res.json({ message: "faqs has been deleted successfully" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
