@@ -13,7 +13,6 @@ const companySchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    unique: true,
   },
   phoneNumber: {
     type: String,
@@ -35,7 +34,7 @@ const companySchema = new mongoose.Schema({
 });
 
 // token generation
-companySchema.methods.generateAuthToken = () => {
+companySchema.methods.generateAuthToken = function () {
   const token = jwt.sign(
     {
       _id: this._id,

@@ -21,21 +21,19 @@ const router = express.Router();
  *    responses:
  *      '200':
  *        description: A successful response containg all terms and conditions in JSON
- *      '400':
+ *      '404':
  *        description: message in json format indicating  not found!
  */
 router.get("/", async (req, res) => {
   const tac = await TAC.find();
   if (!tac) {
-    res.status(400).json({ notFound: "Not found" });
+    res.status(404).json({ notFound: "Not found" });
   } else {
     res.json({ data: tac });
   }
 });
 
 // getting tac by id
-
-// getting a faq by id
 /**
  * @swagger
  * tags:

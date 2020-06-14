@@ -35,7 +35,7 @@ const Joi = require("joi");
  *    responses:
  *      '200':
  *        description: A successful response containg all companys in JSON
- *      '400':
+ *      '404':
  *        description: message in json format indicating  not found!
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
@@ -64,8 +64,8 @@ router.get("/", auth, async (req, res) => {
  *      description: Object ID of the company to get.
  *    responses:
  *      '200':
- *        description: A successful response containg all companys in JSON
- *      '400':
+ *        description: A successful response containg a companys in JSON
+ *      '404':
  *        description: message in json format indicating  not found!
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
@@ -75,7 +75,7 @@ router.get("/me/:id", auth, async (req, res) => {
   if (company) {
     res.json({ data: company });
   } else {
-    res.status(400).json({ message: "Not Found!" });
+    res.status(404).json({ message: "Not Found!" });
   }
 });
 
@@ -110,19 +110,17 @@ router.get("/me/:id", auth, async (req, res) => {
 router.post("/login", async (req, res) => {
   const { error } = validateLogin(req.body);
   if (error) return res.status(400).send(error.details[0].message);
-
   let company = await Company.findOne({ email: req.body.email });
   if (!company)
-    return res.status(400).json({ error: "Invalid email or password." });
-
+    return res.status(400).json({ message: "Invalid email or password." });
   const validPassword = await bcrypt.compare(
     req.body.password,
     company.password
   );
   if (!validPassword)
-    return res.status(400).json({ error: "Invalid email or password." });
-
+    return res.status(400).json({ message: "Invalid email or password." });
   const token = company.generateAuthToken();
+  res.header("x-auth-token", token);
   res.json({ token });
 });
 
@@ -156,31 +154,28 @@ router.post("/login", async (req, res) => {
  *            type: string
  *    responses:
  *      '200':
- *        description: jwt token for that particular  new company.
+ *        description: jwt token for that particular new company.
  *      '400':
  *        description: message in json format indicating company with email already exists.
  */
+
 router.post("/register", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
-
   let company = await Company.findOne({ email: req.body.email });
   if (company)
     return res.status(400).json({
-      error: `Company with email ${req.body.email} is already registered`,
+      message: `Company with email ${req.body.email} is already registered`,
     });
-
   company = new Company(
     _.pick(req.body, ["name", "password", "email", "phoneNumber"])
   );
-
   const salt = await bcrypt.genSalt(10);
   company.password = await bcrypt.hash(company.password, salt);
   await company.save();
-
   const token = company.generateAuthToken();
-
-  res.header("x-auth-token", token).json({ token });
+  res.header("x-auth-token", token);
+  res.json({ token });
 });
 
 // new password after resetting
@@ -208,13 +203,13 @@ router.post("/register", async (req, res) => {
  *    responses:
  *      '200':
  *        description: jwt token for that particular emoloyee.
- *      '400':
- *        description: message in json format indicating Invalid id.
+ *      '404':
+ *        description: message in json format indicating Id not found
  */
 router.post("/resetPassword/newPassword", async (req, res) => {
   const companyId = await Company.findById(req.body._id);
   if (!companyId) {
-    res.status(400).json({ message: "Invalid id" });
+    res.status(404).json({ message: "Company Id Not Found" });
   } else {
     const salt = await bcrypt.genSalt(10);
     const password = await bcrypt.hash(req.body.newPassword, salt);
@@ -230,7 +225,7 @@ router.post("/resetPassword/newPassword", async (req, res) => {
     const token = company.generateAuthToken();
     res.json({
       message: "password has been updated successfully",
-      data: token,
+      token,
     });
   }
 });
@@ -257,27 +252,27 @@ router.post("/resetPassword/newPassword", async (req, res) => {
  *    responses:
  *      '200':
  *        description: message in json formet indicating An email with the link has been forwarded to you.
- *      '400':
+ *      '404':
  *        description: message in json format indicating Invalid email.
  */
+
+// FIXME: subject is not defined ReferenceError: subject is not defined in sendNotification waly main
 router.post("/resetPassword/sendEmail", async (req, res) => {
   const email = req.body.email;
   const company = await Company.findOne({ email });
   if (!company) {
-    res.status(400).json({ message: "Invalid email" });
+    res.status(404).json({ message: "Not Found!" });
   } else {
     sendEmailForResetPassword(
       email,
       "Reset Your password",
-      "follow the link to generate code ",
+      "Follow the link to generate code ",
       company._id
     );
   }
   res.json({ message: "An email with the link has been forwarded to you.." });
 });
 
-// TODO: testing. put nae chal ra tha idr depresion error ara tha ma post lga dia ha .
-// FIXME: subject is not defined ReferenceError: subject is not defined in sendNotification waly main
 /**
  * @swagger
  * /api/company/sendEmailVerificationCode/:
@@ -307,13 +302,14 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
  *      '400':
  *        description: message in json format indicating Invalid email
  */
+// FIXME: subject is not defined ReferenceError: subject is not defined in sendNotification waly main
 router.post("/sendEmailVerificationCode", auth, async (req, res) => {
   const { code } = req.body;
   const { to } = req.body;
   if (sendEmailVerificationCode(to, code)) {
     res.json({ message: "A code has been sent to your mail ." });
   } else {
-    res.status(401).json({ message: "Invalid email" });
+    res.status(400).json({ message: "Invalid email" });
   }
 });
 
@@ -329,7 +325,7 @@ router.post("/sendEmailVerificationCode", auth, async (req, res) => {
  *      name: id
  *      type: string
  *      required: true
- *      description: company_id which is use to delete an employee
+ *      description: company_id for verification
  *    - in: header
  *      name: x-auth-token
  *      type: string
@@ -338,12 +334,17 @@ router.post("/sendEmailVerificationCode", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: message in json formet containing company account is verified
- *      '400':
+ *      '404':
  *        description: message in json format indicating not found as an empty array
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 
 router.post("/verifyEmail/:id", auth, async (req, res) => {
   const company = await Company.findById({ _id: req.params.id });
+  if (!company) {
+    res.status(404).json({ message: "Company not found" });
+  }
   await Company.updateOne(
     { _id: req.params.id },
     {
@@ -358,8 +359,6 @@ router.post("/verifyEmail/:id", auth, async (req, res) => {
   });
 });
 
-// TODO: testing. put nae chal ra tha idr depresion error ara tha ma post lga dia ha ...
-// FIXME: subject is not defined ReferenceError: subject is not defined in sendNotification waly main
 /**
  * @swagger
  * /api/company/verifyAccount/{id}:
@@ -381,12 +380,17 @@ router.post("/verifyEmail/:id", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: message in json formet containing company account is verified
- *      '400':
- *        description: message in json format indicating not found as an empty array
+ *      '404':
+ *        description: message in json format indicating not found
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 
 router.post("/verifyAccount/:id", admin, async (req, res) => {
   const company = await Company.findById({ _id: req.params.id });
+  if (!company) {
+    res.status(404).json({ message: "Company not found" });
+  }
   await Company.updateOne(
     { _id: req.params.id },
     {
@@ -399,7 +403,7 @@ router.post("/verifyAccount/:id", admin, async (req, res) => {
   sendNotification(
     company.email,
     "Your account has been successfully  verified",
-    "Your account has been successfully  verified"
+    `Hi ${company.name}, your account has been successfully  verified`
   );
   res.json({
     message: `${company.name}'s The acount has been successfully verified`,
@@ -418,7 +422,7 @@ router.post("/verifyAccount/:id", admin, async (req, res) => {
  *      name: id
  *      type: string
  *      required: true
- *      description: company_id which is use to delete an employee
+ *      description: company_id to block
  *    - in: header
  *      name: x-auth-token
  *      type: string
@@ -427,11 +431,16 @@ router.post("/verifyAccount/:id", admin, async (req, res) => {
  *    responses:
  *      '200':
  *        description: message in json formet containing company is blocked
- *      '400':
- *        description: message in json format indicating not found as an empty array
+ *      '404':
+ *        description: message in json format indicating not found
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.post("/companyBlocking/:id", auth, async (req, res) => {
   const company = await Company.findById({ _id: req.params.id });
+  if (!company) {
+    res.status(404).json({ message: "Company not found" });
+  }
   await Company.updateOne(
     { _id: req.params.id },
     { $set: { blocked: true } },
@@ -469,9 +478,9 @@ router.post("/companyBlocking/:id", auth, async (req, res) => {
 router.delete("/companyRemove/:id", auth, async (req, res) => {
   const company = await Company.findByIdAndRemove(req.params.id);
   if (!company) {
-    return res.status(400).json({ error: "company not found" });
+    return res.status(404).json({ message: "company not found" });
   } else {
-    res.json({ message: "company has been deleted successfully" });
+    res.json({ message: "Company has been deleted successfully" });
   }
 });
 
@@ -489,16 +498,11 @@ router.delete("/companyRemove/:id", auth, async (req, res) => {
  *      type: string
  *      required: true
  *      description: name which is use to search a company
- *    - in: header
- *      name: x-auth-token
- *      type: string
- *      required: true
- *      description: jwt token containg JWT.
  *    responses:
  *      '200':
  *        description: message in json formet containing company matched with query
- *      '400':
- *        description: message in json format indicating not found as an empty array
+ *      '404':
+ *        description: message in json formet containing no company found named as query specified
  */
 
 router.get("/searchCompany/:id", async (req, res) => {
@@ -510,7 +514,13 @@ router.get("/searchCompany/:id", async (req, res) => {
       foundedCompanies.push(company);
     }
   });
-  res.json({ data: foundedCompanies });
+  if (foundedCompanies.length === 0) {
+    res
+      .status(404)
+      .json({ message: `No company found with named as ${query}` });
+  } else {
+    res.json({ data: foundedCompanies });
+  }
 });
 
 // function to validate login params

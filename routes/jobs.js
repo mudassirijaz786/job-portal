@@ -31,16 +31,19 @@ const router = express.Router();
  *    responses:
  *      '200':
  *        description: A successful response containg the info about that particular Job
- *      '400':
+ *      '404':
  *        description: message in json format indicating Job not found!
  */
 router.get("/:id", async (req, res) => {
   const job = await Job.findById(req.params.id);
-  res.json({ data: job });
+  if (!job) {
+    res.status(404).json({ message: "no job found matching with given ID" });
+  } else {
+    res.json({ data: job });
+  }
 });
 
 // getting all jobs
-
 /**
  * @swagger
  * /api/job:
@@ -88,24 +91,29 @@ router.get("/", async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response containg apply for jobs in JSON
- *      '400':
+ *      '404':
  *        description: message in json format indicating  not found!
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.put("/applyForJob", async (req, res) => {
-  const job = await Job.findByIdAndUpdate(
-    req.body.job_id,
-    {
-      $push: {
-        applied_by: { employee_id: req.body.applied_by },
+  const found = Job.findById(req.body.job_id);
+  if (!found) {
+    res.status(404).json({ message: "Job Not Found!" });
+  } else {
+    await Job.findByIdAndUpdate(
+      req.body.job_id,
+      {
+        $push: {
+          applied_by: { employee_id: req.body.applied_by },
+        },
       },
-    },
-    { new: true }
-  );
-  res.json({
-    message: "You've applied the job to the organization successfully",
-  });
+      { new: true }
+    );
+    res.json({
+      message: "You've applied the job to the organization successfully",
+    });
+  }
 });
 
 // appied jobs for a customer
@@ -163,7 +171,7 @@ router.get("/appliedJobs/:id", async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response containg collect cv in JSON
- *      '400':
+ *      '404':
  *        description: message in json format indicating  not found!
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
@@ -172,16 +180,20 @@ router.get("/appliedJobs/:id", async (req, res) => {
 router.get("/collectCV/:jobId", auth, async (req, res) => {
   const jobId = req.params.jobId;
   const job = await Job.findById(jobId);
-  const profiles = [];
-  for (let i = 0; i < job.applied_by.length; i++) {
-    const element = job.applied_by[i];
-    const pr = await Profile.findOne({ employee_id: element.employee_id })
-      .populate("employee_id")
-      .exec();
-    pr.employee_id["password"] = "";
-    profiles.push(pr);
+  if (!job) {
+    res.status(404).json({ message: "There is no cv submitted for this job" });
+  } else {
+    const profiles = [];
+    for (let i = 0; i < job.applied_by.length; i++) {
+      const element = job.applied_by[i];
+      const pr = await Profile.findOne({ employee_id: element.employee_id })
+        .populate("employee_id")
+        .exec();
+      pr.employee_id["password"] = "";
+      profiles.push(pr);
+    }
+    res.json({ data: profiles });
   }
-  res.json({ data: profiles });
 });
 
 // searching a job
@@ -206,7 +218,7 @@ router.get("/collectCV/:jobId", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: message in json formet containing job matched with query
- *      '400':
+ *      '404':
  *        description: message in json format indicating not found as an empty array
  */
 
@@ -225,7 +237,11 @@ router.get("/searchjob/:id", async (req, res) => {
       foundedJobs.push(job);
     }
   });
-  res.json({ data: foundedJobs });
+  if (foundedJobs.length === 0) {
+    res.status(404).json({ message: `No job found with named as ${query}` });
+  } else {
+    res.json({ data: foundedJobs });
+  }
 });
 
 // post a new job
@@ -266,7 +282,10 @@ router.get("/searchjob/:id", async (req, res) => {
  *        - area
  *        - yearsOfExperience
  *        - salaryRange
+ *        - company_id
  *        properties:
+ *          company_id:
+ *            type: string
  *          title:
  *            type: string
  *          description:
@@ -290,7 +309,6 @@ router.get("/searchjob/:id", async (req, res) => {
 router.post("/postNewJob", auth, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
-
   const job = new Job(
     _.pick(req.body, [
       "title",
@@ -303,7 +321,6 @@ router.post("/postNewJob", auth, async (req, res) => {
       "company_id",
     ])
   );
-
   await job.save();
   res.json({ message: "Job has been posted successfully", data: job });
 });
@@ -328,7 +345,7 @@ router.post("/postNewJob", auth, async (req, res) => {
  *      description: job_id to update it
  *    - in: body
  *      name: Job
- *      description: The Job to add.
+ *      description: The Job to update.
  *      schema:
  *        type: object
  *        required:
@@ -359,25 +376,26 @@ router.post("/postNewJob", auth, async (req, res) => {
  *            type: string
  *    responses:
  *      '200':
- *        description: a successful message saying faq has been posted
+ *        description: a successful message saying job has been updated
  *      '400':
  *        description: message contains error indications
+ *      '404':
+ *        description: message contains not found error
  */
 
 router.put("/:id", auth, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
-
-  try {
+  const found = Job.findById(req.params.id);
+  if (!found) {
+    res.status(404).json({ message: "Invalid id. Job not found" });
+  } else {
     const jobs = await Job.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
       { new: true }
     );
-
     res.json({ message: "Job has been updateed successfully", data: jobs });
-  } catch (error) {
-    res.status(400).json({ message: "Invalid id. Job not found" });
   }
 });
 

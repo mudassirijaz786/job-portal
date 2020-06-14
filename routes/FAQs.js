@@ -21,13 +21,13 @@ const router = express.Router();
  *    responses:
  *      '200':
  *        description: A successful response containg all faqs in JSON
- *      '400':
+ *      '404':
  *        description: message in json format indicating  not found!
  */
 router.get("/", async (req, res) => {
   const faqs = await FAQs.find();
   if (!faqs) {
-    res.status(400).json({ notFound: "no faq in database" });
+    res.status(404).json({ notFound: "no faq in database" });
   } else {
     res.json({ data: faqs });
   }
@@ -57,7 +57,7 @@ router.get("/", async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response containg the info about that particular faq
- *      '400':
+ *      '404':
  *        description: message in json format indicating faq not found!
  */
 router.get("/:id", async (req, res) => {
@@ -65,7 +65,7 @@ router.get("/:id", async (req, res) => {
   if (faq) {
     res.json({ data: faq });
   } else {
-    res.status(400).json({ notFound: "faq not found" });
+    res.status(404).json({ notFound: "faq not found" });
   }
 });
 
@@ -113,7 +113,6 @@ router.get("/:id", async (req, res) => {
 router.post("/", auth, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
-
   const faqs = new FAQs(_.pick(req.body, ["question", "answer"]));
   await faqs.save();
   res.json({ message: "faqs has been saved successfully", data: faqs });
@@ -147,16 +146,25 @@ router.post("/", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response message in json indicating faq has been updated successfully
+ *      '404':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.put("/:id", auth, async (req, res) => {
-  const faqs = await FAQs.findByIdAndUpdate(
-    req.params.id,
-    { $set: req.body },
-    { new: true }
-  );
-  res.json({ message: "faqs has been updated and successfully", data: faqs });
+  let found = await FAQs.findById({ _id: req.params.id });
+  if (!found) {
+    return res.status(404).json({
+      error: "No faq in the system",
+    });
+  } else {
+    const faqs = await FAQs.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true }
+    );
+    res.json({ message: "faqs has been updated and successfully", data: faqs });
+  }
 });
 // deleting a faq
 /**
@@ -179,6 +187,8 @@ router.put("/:id", auth, async (req, res) => {
  *      description:  Object ID of the faq to delete
  *    responses:
  *      '200':
+ *        description: A successful response message in json indicating  faq Deleted successfully
+ *      '404':
  *        description: A successful response message in json indicating  faq Deleted successfully
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.

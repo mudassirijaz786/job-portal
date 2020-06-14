@@ -1,6 +1,6 @@
 {
   "jwtPrivateKey": "unsecureKey",
-  "db": "mongodb://elys:elys123Pass@ds141450.mlab.com:41450/elys",
+  "db": "mongodb://elys:elyspass123@ds061839.mlab.com:61839/elys",
   "port": "3900",
   "requiresAuth": false,
   "frontEndURL": "",

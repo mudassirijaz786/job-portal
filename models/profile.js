@@ -62,7 +62,7 @@ const profileSchema = new mongoose.Schema({
         type: String,
       },
       completionYear: {
-        type: Number,
+        type: String,
       },
     },
   ],
