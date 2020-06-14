@@ -23,9 +23,9 @@ validateJob = (company) => {
     city: Joi.string().min(5).max(50).required(),
     area: Joi.string().min(5).max(50).required(),
     description: Joi.string().min(10).max(100).required(),
-    noOfPositions: Joi.number().required(),
-    yearsOfExperience: Joi.number().required(),
-    salaryRange: Joi.number().required(),
+    noOfPositions: Joi.string().required(),
+    yearsOfExperience: Joi.string().required(),
+    salaryRange: Joi.string().required(),
     company_id: Joi.objectId(),
   };
 

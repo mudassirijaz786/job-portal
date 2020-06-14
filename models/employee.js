@@ -16,12 +16,10 @@ const employeeSchema = new mongoose.Schema({
     required: true,
     minlength: 5,
     maxlength: 255,
-    unique: true,
   },
   phoneNumber: {
     type: String,
     required: true,
-    unique: true,
   },
   password: {
     type: String,
@@ -37,7 +35,7 @@ const employeeSchema = new mongoose.Schema({
 });
 
 // token generation
-employeeSchema.methods.generateAuthToken = () => {
+employeeSchema.methods.generateAuthToken = function () {
   const token = jwt.sign(
     {
       _id: this._id,

@@ -42,7 +42,7 @@ const router = express.Router();
  *    responses:
  *      '200':
  *        description: A successful response containg a current profile of employee
- *      '400':
+ *      '404':
  *        description: message in json format indicating  not found!
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
@@ -52,7 +52,7 @@ router.get("/me/:id", auth, async (req, res) => {
   if (profile) {
     res.json({ data: profile });
   } else {
-    res.status(400).json({ message: "Not Found!" });
+    res.status(404).json({ message: "Not Found!" });
   }
 
   res.send(profile);
@@ -81,13 +81,14 @@ router.get("/me/:id", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response message in json indicating profile has been created successfully
+ *      '400':
+ *        description: error for bad request
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.post("/", auth, async (req, res) => {
   const { error } = validateProfile(req.body);
   if (error) return res.status(400).send(error.details[0].message);
-
   const profile = new Profile(
     _.pick(req.body, [
       "employee_id",
@@ -99,15 +100,14 @@ router.post("/", auth, async (req, res) => {
       "skills",
     ])
   );
-
   await profile.save();
   res.json({ message: "Profile has been saved successfully", data: profile });
 });
 
 /**
  * @swagger
- * /api/summary/{id}:
- *  get:
+ * /api/profile/summary/{id}:
+ *  post:
  *    description: Use to request a update summary
  *    summary:  Use to request an update summary
  *    tags: [Profile]
@@ -135,25 +135,29 @@ router.post("/", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response containg summary updation
- *      '400':
+ *      '404':
  *        description: message in json format indicating  not found!
+ *      '400':
+ *        description: error for bad request
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.post("/summary/:id", auth, async (req, res) => {
-  await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
-
-    {
-      $set: {
-        summary: req.body.summary,
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Not Found!" });
+  } else {
+    await Profile.findOneAndUpdate(
+      { employee_id: req.params.id },
+      {
+        $set: {
+          summary: req.body.summary,
+        },
       },
-    },
-
-    { new: true }
-  );
-
-  res.json({ message: "Summary has been saved successfully" });
+      { new: true }
+    );
+    res.json({ message: "Summary has been saved successfully" });
+  }
 });
 
 // adding project to projects array
@@ -184,23 +188,29 @@ router.post("/summary/:id", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response message in json indicating profile has been created successfully
+ *      '400':
+ *        description: error for bad request
+ *      '404':
+ *        description: message in json format indicating  not found!
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.post("/addProject/:id", auth, async (req, res) => {
-  const { error } = validateProject(req.body.project);
+  const { error } = validateProject(req.body);
   if (error) {
     return res.status(400).send(error.details[0].message);
+  }
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
   } else {
-    const profile = await Profile.findOneAndUpdate(
+    await Profile.findOneAndUpdate(
       { employee_id: req.params.id },
-
       {
         $push: {
-          projects: req.body.project,
+          projects: req.body,
         },
       },
-
       { new: true }
     );
     res.json({ message: "Project has been saved successfully" });
@@ -235,28 +245,33 @@ router.post("/addProject/:id", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response message in json indicating experience in profile has been added successfully
+ *      '400':
+ *        description: error for bad request
+ *      '404':
+ *        description: response message that profile not found
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.post("/addExperince/:id", auth, async (req, res) => {
-  const { error } = validateExperience(req.body.experience);
+  const { error } = validateExperience(req.body);
   if (error) {
     return res.status(400).send(error.details[0].message);
+  }
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
   } else {
-    const profile = await Profile.findOneAndUpdate(
+    await Profile.findOneAndUpdate(
       { employee_id: req.params.id },
-
       {
         $push: {
-          experiences: req.body.experience,
+          experiences: req.body,
         },
       },
       { new: true }
     );
-
     res.json({
       message: "Experience has been saved successfully",
-      data: profile,
     });
   }
 });
@@ -289,29 +304,33 @@ router.post("/addExperince/:id", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response message in json indicating addEducation in profile has been added successfully
+ *      '404':
+ *        description: A successful response message that profile not found
+ *      '400':
+ *        description: response for bad request
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.post("/addEducation/:id", auth, async (req, res) => {
-  const { error } = validateEducation(req.body.education);
+  const { error } = validateEducation(req.body);
   if (error) {
     return res.status(400).send(error.details[0].message);
+  }
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
   } else {
-    const profile = await Profile.findOneAndUpdate(
+    await Profile.findOneAndUpdate(
       { employee_id: req.params.id },
-
       {
         $push: {
-          educations: req.body.education,
+          educations: req.body,
         },
       },
-
       { new: true }
     );
-
     res.json({
       message: "Education has been saved successfully",
-      data: profile,
     });
   }
 });
@@ -344,29 +363,33 @@ router.post("/addEducation/:id", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response message in json indicating language in profile has been added successfully
+ *      '404':
+ *        description: not found
+ *      '400':
+ *        description: bad request
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.post("/addLanguage/:id", auth, async (req, res) => {
-  const { error } = validateLanguage(req.body.language);
+  const { error } = validateLanguage(req.body);
   if (error) {
     return res.status(400).send(error.details[0].message);
+  }
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
   } else {
-    const profile = await Profile.findOneAndUpdate(
+    await Profile.findOneAndUpdate(
       { employee_id: req.params.id },
-
       {
         $push: {
-          languages: req.body.language,
+          languages: req.body,
         },
       },
-
       { new: true }
     );
-
     res.json({
       message: "Language has been saved successfully",
-      data: profile,
     });
   }
 });
@@ -399,23 +422,29 @@ router.post("/addLanguage/:id", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response message in json indicating skill in profile has been added successfully
+ *      '404':
+ *        description: A successful response message that profile not found
+ *      '400':
+ *        description: bad request
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.post("/addSkill/:id", auth, async (req, res) => {
-  const { skill } = req.body;
-  const { error } = validateSkill(skill);
+  const { error } = validateSkill(req.body);
   if (error) {
     return res.status(400).send(error.details[0].message);
+  }
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
   } else {
     await Profile.findOneAndUpdate(
       { employee_id: req.params.id },
       {
         $push: {
-          skills: skill,
+          skills: req.body,
         },
       },
-
       { new: true }
     );
     res.json({ message: "Skill has been saved successfully" });
@@ -454,24 +483,30 @@ router.post("/addSkill/:id", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response message in json indicating project has been deleted
+ *      '404':
+ *        description: A successful response message that profile not found
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.delete("/deleteProject/:id", auth, async (req, res) => {
   const { _id } = req.body;
-  await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
-    {
-      $pull: {
-        projects: {
-          _id: _id,
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
+  } else {
+    await Profile.findOneAndUpdate(
+      { employee_id: req.params.id },
+      {
+        $pull: {
+          projects: {
+            _id: _id,
+          },
         },
       },
-    },
-
-    { new: true }
-  );
-  res.json({ message: "Project has been pulled out successfully" });
+      { new: true }
+    );
+    res.json({ message: "Project has been pulled out successfully" });
+  }
 });
 
 // pulling experience object
@@ -504,6 +539,8 @@ router.delete("/deleteProject/:id", auth, async (req, res) => {
  *          _id:
  *            type: string
  *    responses:
+ *      '404':
+ *        description: A successful response message that profile not found
  *      '200':
  *        description: A successful response message in json indicating experience has been deleted
  *      '401':
@@ -511,19 +548,23 @@ router.delete("/deleteProject/:id", auth, async (req, res) => {
  */
 router.delete("/deleteExperince/:id", auth, async (req, res) => {
   const { _id } = req.body;
-  await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
-    {
-      $pull: {
-        experiences: {
-          _id: _id,
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
+  } else {
+    await Profile.findOneAndUpdate(
+      { employee_id: req.params.id },
+      {
+        $pull: {
+          experiences: {
+            _id: _id,
+          },
         },
       },
-    },
-
-    { new: true }
-  );
-  res.json({ message: "Experience has been pulled out successfully" });
+      { new: true }
+    );
+    res.json({ message: "Experience has been pulled out successfully" });
+  }
 });
 
 // pulling education object
@@ -556,6 +597,8 @@ router.delete("/deleteExperince/:id", auth, async (req, res) => {
  *          _id:
  *            type: string
  *    responses:
+ *      '404':
+ *        description: A successful response message that profile not found
  *      '200':
  *        description: A successful response message in json indicating education has been deleted
  *      '401':
@@ -564,18 +607,23 @@ router.delete("/deleteExperince/:id", auth, async (req, res) => {
 
 router.delete("/deleteEducation/:id", auth, async (req, res) => {
   const { _id } = req.body;
-  await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
-    {
-      $pull: {
-        educations: {
-          _id: _id,
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
+  } else {
+    await Profile.findOneAndUpdate(
+      { employee_id: req.params.id },
+      {
+        $pull: {
+          educations: {
+            _id: _id,
+          },
         },
       },
-    },
-    { new: true }
-  );
-  res.json({ message: "Education has been pulled out successfully" });
+      { new: true }
+    );
+    res.json({ message: "Education has been pulled out successfully" });
+  }
 });
 
 /**
@@ -607,6 +655,8 @@ router.delete("/deleteEducation/:id", auth, async (req, res) => {
  *          _id:
  *            type: string
  *    responses:
+ *      '404':
+ *        description: A successful response message that profile not found
  *      '200':
  *        description: A successful response message in json indicating skill has been deleted
  *      '401':
@@ -614,17 +664,21 @@ router.delete("/deleteEducation/:id", auth, async (req, res) => {
  */
 router.delete("/deleteSkill/:id", auth, async (req, res) => {
   const { _id } = req.body;
-  await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
-    {
-      $pull: {
-        skills: { _id: _id },
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
+  } else {
+    await Profile.findOneAndUpdate(
+      { employee_id: req.params.id },
+      {
+        $pull: {
+          skills: { _id: _id },
+        },
       },
-    },
-    { new: true }
-  );
-
-  res.json({ message: "Skill has been pulled out successfully" });
+      { new: true }
+    );
+    res.json({ message: "Skill has been pulled out successfully" });
+  }
 });
 
 /**
@@ -656,6 +710,8 @@ router.delete("/deleteSkill/:id", auth, async (req, res) => {
  *          _id:
  *            type: string
  *    responses:
+ *      '404':
+ *        description: A successful response message that profile not found
  *      '200':
  *        description: A successful response message in json indicating language has been deleted
  *      '401':
@@ -664,18 +720,23 @@ router.delete("/deleteSkill/:id", auth, async (req, res) => {
 
 router.delete("/deleteLanguage/:id", auth, async (req, res) => {
   const { _id } = req.body;
-  await Profile.findOneAndUpdate(
-    { employee_id: req.params.id },
-    {
-      $pull: {
-        languages: {
-          _id: _id,
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
+  } else {
+    await Profile.findOneAndUpdate(
+      { employee_id: req.params.id },
+      {
+        $pull: {
+          languages: {
+            _id: _id,
+          },
         },
       },
-    },
-    { new: true }
-  );
-  res.json({ message: "Language has been pulled out successfully" });
+      { new: true }
+    );
+    res.json({ message: "Language has been pulled out successfully" });
+  }
 });
 
 // updating project object
@@ -706,27 +767,36 @@ router.delete("/deleteLanguage/:id", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response message in json indicating profile has been uppdated successfully
+ *      '400':
+ *        description: bad request
+ *      '404':
+ *        description: not found
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 
 router.put("/updateProject/:id", auth, async (req, res) => {
-  const { project } = req.body;
-  const { error } = validateProject(project);
+  const { _id, name, url, description } = req.body;
+  const { error } = validateProject(req.body);
   if (error) return res.status(400).send(error.details[0].message);
-  await Profile.findOneAndUpdate(
-    { employee_id: req.params.id, "projects._id": project._id },
-    {
-      $set: {
-        "projects.$.name": project.name,
-        "projects.$.url": project.url,
-        "projects.$.description": project.description,
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
+  } else {
+    console.log(req.body);
+    await Profile.findOneAndUpdate(
+      { employee_id: req.params.id, "projects._id": _id },
+      {
+        $set: {
+          "projects.$.name": name,
+          "projects.$.url": url,
+          "projects.$.description": description,
+        },
       },
-    },
-    { new: true }
-  );
-
-  res.json({ message: "Profile has been saved successfully" });
+      { new: true }
+    );
+    res.json({ message: "Profile has been saved successfully" });
+  }
 });
 
 // updating experience object
@@ -755,33 +825,49 @@ router.put("/updateProject/:id", auth, async (req, res) => {
  *      schema:
  *        "$ref": "#/definitions/experienceUpdate"
  *    responses:
+ *      '400':
+ *        description: bad request
+ *      '404':
+ *        description: not found
  *      '200':
  *        description: A successful response message in json indicating experience has been uppdated successfully
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.put("/updateExperince/:id", auth, async (req, res) => {
-  const { experience } = req.body;
-  const { error } = validateExperience(experience);
+  const {
+    _id,
+    jobTitle,
+    company,
+    industry,
+    localtion,
+    startDate,
+    endDate,
+    description,
+  } = req.body;
+  const { error } = validateExperience(req.body);
   if (error) return res.status(400).send(error.details[0].message);
-  await Profile.findOneAndUpdate(
-    { employee_id: req.params.id, "experiences._id": experience._id },
-
-    {
-      $set: {
-        "experiences.$.jobTitle": experience.jobTitle,
-        "experiences.$.company": experience.company,
-        "experiences.$.industry": experience.industry,
-        "experiences.$.localtion": experience.localtion,
-        "experiences.$.startDate": experience.startDate,
-        "experiences.$.endDate": experience.endDate,
-        "experiences.$.description": experience.description,
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
+  } else {
+    await Profile.findOneAndUpdate(
+      { employee_id: req.params.id, "experiences._id": _id },
+      {
+        $set: {
+          "experiences.$.jobTitle": jobTitle,
+          "experiences.$.company": company,
+          "experiences.$.industry": industry,
+          "experiences.$.localtion": localtion,
+          "experiences.$.startDate": startDate,
+          "experiences.$.endDate": endDate,
+          "experiences.$.description": description,
+        },
       },
-    },
-
-    { new: true }
-  );
-  res.json({ message: "Experience has been updated and saved successfully" });
+      { new: true }
+    );
+    res.json({ message: "Experience has been updated and saved successfully" });
+  }
 });
 
 // updating education object
@@ -810,32 +896,39 @@ router.put("/updateExperince/:id", auth, async (req, res) => {
  *      schema:
  *        "$ref": "#/definitions/educationUpdate"
  *    responses:
+ *      '400':
+ *        description: bad request
+ *      '404':
+ *        description: not found
  *      '200':
  *        description: A successful response message in json indicating education has been uppdated successfully
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.put("/updateEducation/:id", auth, async (req, res) => {
-  const { education } = req.body;
-  const { error } = validateEducation(education);
+  const { _id, instituteName, programme, major, completionYear } = req.body;
+  const { error } = validateEducation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
-  await Profile.findOneAndUpdate(
-    { employee_id: req.params.id, "educations._id": education._id },
-    {
-      $set: {
-        "educations.$.instituteName": education.instituteName,
-        "educations.$.programme": education.programme,
-        "educations.$.major": education.major,
-        "educations.$.completionYear": education.completionYear,
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
+  } else {
+    await Profile.findOneAndUpdate(
+      { employee_id: req.params.id, "educations._id": _id },
+      {
+        $set: {
+          "educations.$.instituteName": instituteName,
+          "educations.$.programme": programme,
+          "educations.$.major": major,
+          "educations.$.completionYear": completionYear,
+        },
       },
-    },
-
-    { new: true }
-  );
-
-  res.json({
-    message: "Education has been updated and saved successfully",
-  });
+      { new: true }
+    );
+    res.json({
+      message: "Education has been updated and saved successfully",
+    });
+  }
 });
 
 // updating skill object
@@ -864,28 +957,37 @@ router.put("/updateEducation/:id", auth, async (req, res) => {
  *      schema:
  *        "$ref": "#/definitions/skillUpdate"
  *    responses:
+ *      '400':
+ *        description: bad request
+ *      '404':
+ *        description: not found
  *      '200':
  *        description: A successful response message in json indicating skill has been uppdated successfully
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.put("/updateSkill/:id", auth, async (req, res) => {
-  const { skill } = req.body;
-  const { error } = validateSkill(skill);
+  const { _id, name, level } = req.body;
+  const { error } = validateSkill(req.body);
   if (error) return res.status(400).send(error.details[0].message);
-  await Profile.findOneAndUpdate(
-    { employee_id: req.params.id, "skills._id": skill._id },
-    {
-      $set: {
-        "skills.$.name": skill.name,
-        "skills.$.level": skill.level,
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
+  } else {
+    await Profile.findOneAndUpdate(
+      { employee_id: req.params.id, "skills._id": _id },
+      {
+        $set: {
+          "skills.$.name": name,
+          "skills.$.level": level,
+        },
       },
-    },
-    { new: true }
-  );
-  res.json({
-    message: "Skill has been updated and saved successfully",
-  });
+      { new: true }
+    );
+    res.json({
+      message: "Skill has been updated and saved successfully",
+    });
+  }
 });
 
 // updating laguage object
@@ -914,28 +1016,37 @@ router.put("/updateSkill/:id", auth, async (req, res) => {
  *      schema:
  *        "$ref": "#/definitions/languageUpdate"
  *    responses:
+ *      '400':
+ *        description: bad request
+ *      '404':
+ *        description: not found
  *      '200':
  *        description: A successful response message in json indicating language has been uppdated successfully
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.put("/updateLanguage/:id", auth, async (req, res) => {
-  const { language } = req.body;
-  const { error } = validateLanguage(language);
+  const { _id, level, name } = req.body;
+  const { error } = validateLanguage(req.body);
   if (error) return res.status(400).send(error.details[0].message);
-  await Profile.findOneAndUpdate(
-    { employee_id: req.params.id, "languages._id": language._id },
-    {
-      $set: {
-        "languages.$.name": language.name,
-        "languages.$.level": language.level,
+  const found = await Profile.findOne({ employee_id: req.params.id });
+  if (!found) {
+    res.status(404).json({ message: "Profile Not Found!" });
+  } else {
+    await Profile.findOneAndUpdate(
+      { employee_id: req.params.id, "languages._id": _id },
+      {
+        $set: {
+          "languages.$.name": name,
+          "languages.$.level": level,
+        },
       },
-    },
-    { new: true }
-  );
-  res.json({
-    message: "Language has been updated and saved successfully",
-  });
+      { new: true }
+    );
+    res.json({
+      message: "Language has been updated and saved successfully",
+    });
+  }
 });
 
 module.exports = router;

@@ -92,14 +92,14 @@ router.get("/unreadMessages", auth, async (req, res) => {
  *    responses:
  *      '200':
  *        description: A successful response containg all contacts in JSON
- *      '400':
+ *      '404':
  *        description: message in json format indicating  not found!
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 router.get("/me/:id", auth, async (req, res) => {
-  const result = await ContactUs.findById(req.params.id);
-  if (!result) res.status(400).json({ error: "Not Found" });
+  const result = await ContactUs.findById({ _id: req.params.id });
+  if (!result) res.status(404).json({ error: "Not Found" });
   else {
     res.json({ data: result });
   }
