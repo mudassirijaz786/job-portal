@@ -40,7 +40,7 @@ const Joi = require("joi");
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.get("/", auth, admin, async (req, res) => {
+router.get("/", admin, async (req, res) => {
   try {
     const admin = await Admin.find().select("-password");
     if (admin) {
@@ -82,7 +82,7 @@ router.get("/", auth, admin, async (req, res) => {
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.get("/me/:id", auth, admin, async (req, res) => {
+router.get("/me/:id", admin, async (req, res) => {
   try {
     const admin = await Admin.findById(req.params.id).select("-password");
     if (admin) {

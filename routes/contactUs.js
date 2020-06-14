@@ -200,7 +200,7 @@ router.post("/", async (req, res) => {
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.delete("/delete/:id", [auth, admin], async (req, res) => {
+router.delete("/delete/:id", admin, async (req, res) => {
   try {
     await ContactUs.findByIdAndRemove(req.params.id);
     res.json({ message: "Message Deleted successfully" });
@@ -235,7 +235,7 @@ router.delete("/delete/:id", [auth, admin], async (req, res) => {
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.put("/read/:id", auth, async (req, res) => {
+router.put("/read/:id", admin, async (req, res) => {
   try {
     await ContactUs.findByIdAndUpdate(
       req.params.id,

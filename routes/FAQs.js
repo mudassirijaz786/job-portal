@@ -1,4 +1,4 @@
-const auth = require("../middleware/auth");
+const admin = require("../middleware/admin");
 const _ = require("lodash");
 const { FAQs, validate } = require("../models/faqs");
 const express = require("express");
@@ -110,7 +110,7 @@ router.get("/:id", async (req, res) => {
  *        description: message contains error indications
  */
 
-router.post("/", auth, async (req, res) => {
+router.post("/", admin, async (req, res) => {
   try {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -157,7 +157,7 @@ router.post("/", auth, async (req, res) => {
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.put("/:id", auth, async (req, res) => {
+router.put("/:id", admin, async (req, res) => {
   try {
     let found = await FAQs.findById({ _id: req.params.id });
     if (!found) {
@@ -208,7 +208,7 @@ router.put("/:id", auth, async (req, res) => {
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.delete("/:id", auth, async (req, res) => {
+router.delete("/:id", admin, async (req, res) => {
   try {
     const faq = await FAQs.findByIdAndRemove(req.params.id);
     if (!faq) {

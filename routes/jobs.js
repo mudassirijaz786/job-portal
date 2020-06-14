@@ -2,7 +2,6 @@ const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
 const _ = require("lodash");
 const { Job, validate } = require("../models/job");
-const { JobsApplied } = require("../models/jobs_applied");
 const { Employee } = require("../models/employee");
 const { Profile } = require("../models/profile");
 const express = require("express");
@@ -66,7 +65,7 @@ router.get("/:id", async (req, res) => {
  *      '400':
  *        description: message in json format indicating  not found!
  */
-router.get("/", [auth, admin], async (req, res) => {
+router.get("/", admin, async (req, res) => {
   try {
     const job = await Job.find();
     res.json({ data: job });
@@ -257,7 +256,7 @@ router.get("/collectCV/:jobId", auth, async (req, res) => {
  *        description: message in json format indicating not found as an empty array
  */
 
-router.get("/searchjob/:id", [auth, admin], async (req, res) => {
+router.get("/searchjob/:id", auth, async (req, res) => {
   try {
     const jobs = await Job.find();
     const query = req.params.id.toLowerCase();
@@ -424,7 +423,7 @@ router.post("/postNewJob", auth, async (req, res) => {
  *        description: message contains not found error
  */
 
-router.put("/:id", [auth, admin], async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   try {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -472,7 +471,7 @@ router.put("/:id", [auth, admin], async (req, res) => {
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
 
-router.delete("/:id", [auth, admin], async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   try {
     const job = await Job.findByIdAndRemove(req.params.id);
     if (!job) {
