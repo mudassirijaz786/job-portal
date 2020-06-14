@@ -1,8 +1,10 @@
 const express = require("express");
 const { ContactUs, validate } = require("../models/contactUsMessages");
 const auth = require("../middleware/auth");
+const admin = require("../middleware/admin");
 const _ = require("lodash");
 const router = express.Router();
+
 /**
  * @swagger
  * tags:
@@ -198,7 +200,7 @@ router.post("/", async (req, res) => {
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.delete("/delete/:id", auth, async (req, res) => {
+router.delete("/delete/:id", [auth, admin], async (req, res) => {
   try {
     await ContactUs.findByIdAndRemove(req.params.id);
     res.json({ message: "Message Deleted successfully" });

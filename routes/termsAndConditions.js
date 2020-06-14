@@ -1,4 +1,5 @@
 const auth = require("../middleware/auth");
+const admin = require("../middleware/admin");
 const _ = require("lodash");
 const { TAC, validate } = require("../models/termsAndConditions");
 const express = require("express");
@@ -106,7 +107,7 @@ router.get("/:id", async (req, res) => {
  *      '400':
  *        description: message contains error indications
  */
-router.post("/", auth, async (req, res) => {
+router.post("/", [auth, admin], async (req, res) => {
   try {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -159,7 +160,7 @@ router.post("/", auth, async (req, res) => {
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.put("/:id", auth, async (req, res) => {
+router.put("/:id", [auth, admin], async (req, res) => {
   try {
     const tac = await TAC.findByIdAndUpdate(
       req.params.id,
@@ -202,7 +203,7 @@ router.put("/:id", auth, async (req, res) => {
  *      '401':
  *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
  */
-router.delete("/:id", auth, async (req, res) => {
+router.delete("/:id", [auth, admin], async (req, res) => {
   try {
     const tac = await TAC.findByIdAndRemove(req.params.id);
     if (!tac) {
