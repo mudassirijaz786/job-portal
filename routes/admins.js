@@ -169,8 +169,7 @@ router.post("/register", async (req, res) => {
   admin.password = await bcrypt.hash(admin.password, salt);
   await admin.save();
   const token = admin.generateAuthToken();
-  res.header("x-auth-token", token);
-  res.json({ token });
+  res.header("x-auth-token", token).json({ token });
 });
 
 // function to validate login params

@@ -7,24 +7,28 @@ const mongoose = require("mongoose");
 const companySchema = new mongoose.Schema({
   name: {
     type: String,
+    required: true,
   },
   password: {
     type: String,
+    required: true,
   },
   email: {
     type: String,
+    required: true,
   },
   phoneNumber: {
     type: String,
+    required: true,
   },
   blocked: {
     type: Boolean,
-    // required: true,
+    required: true,
     default: false,
   },
   emailVerified: {
     type: Boolean,
-    // required: true,
+    required: true,
     default: false,
   },
   accountVerified: {

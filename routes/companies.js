@@ -8,20 +8,49 @@ const express = require("express");
 const { Company, validate } = require("../models/company");
 
 const sendEmailVerificationCode = require("../utils/emailService");
+
 const sendNotification = require("../utils/emailService");
 const router = express.Router();
 const Joi = require("joi");
-
 /**
  * @swagger
  * tags:
  *   name: Company
  *   description: Company management
  */
+
+// deleting all companies
+/**
+ * @swagger
+ * /api/company/deleteAll/:
+ *  delete:
+ *    description: Use to request all companys
+ *    summary:  Use to request all companys
+ *    tags: [Company]
+ *    parameters:
+ *    - in: header
+ *      name: x-auth-token
+ *      type: string
+ *      required: true
+ *      description: jwt token (JWT).
+ *    responses:
+ *      '200':
+ *        description: A successful response containg all companys in JSON
+ *      '401':
+ *        description: message in json format indicating Access denied, no token provided. Please provide auth token.
+ */
+router.get("/deleteALL", auth, async (req, res) => {
+  const company = await Company.find();
+  company.forEach(async (c) => {
+    await Company.findByIdAndRemove(c._id);
+  });
+  res.json({ message: "All companies deleted" });
+});
+
 // getting current company
 /**
  * @swagger
- * /api/company:
+ * /api/company/:
  *  get:
  *    description: Use to request all companys
  *    summary:  Use to request all companys
@@ -256,7 +285,6 @@ router.post("/resetPassword/newPassword", async (req, res) => {
  *        description: message in json format indicating Invalid email.
  */
 
-// FIXME: subject is not defined ReferenceError: subject is not defined in sendNotification waly main
 router.post("/resetPassword/sendEmail", async (req, res) => {
   const email = req.body.email;
   const company = await Company.findOne({ email });
@@ -288,13 +316,16 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
  *        type: object
  *        required:
  *        - email
+ *        - code
  *        properties:
  *         email:
+ *            type: string
+ *         code:
  *            type: string
  *    - in: header
  *      name: x-auth-token
  *      type: string
- *      requiaccountVerifiedred: true
+ *      required: true
  *      description: jwt token containg JWT.
  *    responses:
  *      '200':
@@ -302,14 +333,15 @@ router.post("/resetPassword/sendEmail", async (req, res) => {
  *      '400':
  *        description: message in json format indicating Invalid email
  */
-// FIXME: subject is not defined ReferenceError: subject is not defined in sendNotification waly main
+
 router.post("/sendEmailVerificationCode", auth, async (req, res) => {
   const { code } = req.body;
-  const { to } = req.body;
-  if (sendEmailVerificationCode(to, code)) {
+  const { email } = req.body;
+  try {
+    sendEmailVerificationCode(email, code);
     res.json({ message: "A code has been sent to your mail ." });
-  } else {
-    res.status(400).json({ message: "Invalid email" });
+  } catch (error) {
+    res.status(401).json({ message: "Invalid email" });
   }
 });
 
@@ -329,7 +361,7 @@ router.post("/sendEmailVerificationCode", auth, async (req, res) => {
  *    - in: header
  *      name: x-auth-token
  *      type: string
- *      requiaccountVerifiedred: true
+ *      required: true
  *      description: jwt token containg JWT.
  *    responses:
  *      '200':
